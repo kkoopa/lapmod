@@ -1,7 +1,7 @@
 all: lapmod
 
 lapmod: lapmod.cpp
-	$(CXX) -std=c++14 -O2 lapmod.cpp -o lapmod
+	$(CXX) -std=c++14 -Ofast lapmod.cpp -o lapmod
 
 .PHONY: clean
 
