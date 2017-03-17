@@ -80,9 +80,7 @@ public:
   int height() const { return height_; }
   int width() const { return width_; }
   int *operator[](int index) { return &data_[index * width_]; }
-  const int *operator[](int index) const {
-    return &data_[index * width_];
-  }
+  const int *operator[](int index) const { return &data_[index * width_]; }
 
 private:
   int height_;
