@@ -59,8 +59,8 @@ public:
         l.begin()->size() > std::numeric_limits<int>::max()) {
       throw std::range_error("Matrix dimensions too large.");
     }
-    std::accumulate(l.begin(), l.end(), data_, [](auto *l, const auto &r) {
-      return std::copy(r.begin(), r.end(), l);
+    std::accumulate(l.begin(), l.end(), data_, [](auto *lhs, const auto &rhs) {
+      return std::copy(rhs.begin(), rhs.end(), lhs);
     });
   }
 
@@ -105,7 +105,7 @@ public:
         todo_{new int[cost_matrix_->height()]},
         u_{new int[cost_matrix_->height()]}, v_{new int[cost_matrix_->width()]},
         x_{}, y_{new int[cost_matrix_->width()]},
-        ok_{new int[cost_matrix_->height()]}, z_{-1} {}
+        ok_{new int[cost_matrix_->height()]} {}
   ~problem() {
     delete[] d_;
     delete[] unused_;
@@ -134,6 +134,8 @@ public:
       l_ = other.l_;
       c_ = other.c_;
       other.s_ = nullptr;
+
+      return *this;
     }
 
     const int *data() const { return s_; }
@@ -267,7 +269,7 @@ private:
       while (h <= l0) {
         const auto i = unused_[h++];
         auto v0 = inf, vj = inf;
-        int j0, j1;
+        auto j0 = -1, j1 = -1;
 
         for (auto t = 0; t != number_[i]; ++t) {
           const auto j = kk_[i][t] - 1, dj = cc_[i][t] - v_[j];
@@ -312,12 +314,13 @@ private:
   void augmentation(int l) const {
     int i, j;
     do {
-      for (auto l0 = l + 1, l = 0; l < l0; ++l) {
+      auto l0 = l + 1;
+      for (l = 0; l < l0; ++l) {
         std::fill_n(d_, cost_matrix_->height(), inf);
         std::fill_n(ok_, cost_matrix_->height(), false);
         auto min = inf;
         auto i0 = unused_[l];
-        int td1;
+        auto td1 = -1;
 
         for (auto t = 0; t != number_[i0]; ++t) {
           j = kk_[i0][t] - 1;
@@ -346,14 +349,15 @@ private:
         }
 
         do {
-          const auto j0 = todo_[td1--], i = y_[j0] - 1;
+          const auto j0 = todo_[td1--];
+          i = y_[j0] - 1;
           todo_[td2--] = j0;
 
           auto t = 0;
           for (; kk_[i][t] != j0 + 1; ++t)
             ;
-          const auto h = cc_[i][t] - v_[j0] - min;
-          for (auto t = 0; t != number_[i]; ++t) {
+          auto h = cc_[i][t] - v_[j0] - min;
+          for (t = 0; t != number_[i]; ++t) {
             j = kk_[i][t] - 1;
             if (!ok_[j]) {
               const auto vj = cc_[i][t] - v_[j] - h;
@@ -383,7 +387,7 @@ private:
                 todo_[++td1] = j;
               }
             }
-            for (auto h = 0; h != td1 + 1; ++h) {
+            for (h = 0; h != td1 + 1; ++h) {
               j = todo_[h];
               if (y_[j] == 0) {
                 goto price_update;
@@ -459,7 +463,6 @@ private:
   mutable int *x_;
   int *y_;
   int *ok_;
-  int z_;
 };
 
 matrix read_data(std::string path) {
@@ -480,7 +483,8 @@ matrix read_data(std::string path) {
 
 int main() {
   long answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
-  for (auto i = 0; i < sizeof(answer) / sizeof(answer[0]); ++i) {
+  for (auto i = 0; i < static_cast<int>(sizeof(answer) / sizeof(answer[0]));
+       ++i) {
     auto m = read_data(std::string("problems/assign") +
                        std::to_string(100 * (i + 1)) + std::string(".txt"));
     problem p(&m);
