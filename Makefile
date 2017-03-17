@@ -6,4 +6,4 @@ lapmod: lapmod.cpp
 .PHONY: clean
 
 clean:
-	@rm lapmod
+	-@$(RM) lapmod 2> /dev/null
