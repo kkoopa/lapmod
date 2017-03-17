@@ -32,6 +32,7 @@
  */
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
@@ -489,7 +490,14 @@ int main() {
                        std::to_string(100 * (i + 1)) + std::string(".txt"));
     problem p(&m);
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> start =
+        std::chrono::high_resolution_clock::now();
+
     auto sol = p.solve();
+
+    std::chrono::duration<double> elapsed_seconds =
+        std::chrono::high_resolution_clock::now() - start;
+
     auto begin = sol.data();
     std::cout << '[' << *begin++ - 1;
     for (auto end = begin + sol.size() - 1; begin != end; ++begin) {
@@ -498,6 +506,8 @@ int main() {
     std::cout << "]\n";
 
     std::cout << sol.value() << '\n';
+
+    std::cout << elapsed_seconds.count() << " s\n";
 
     if (sol.value() != answer[i]) {
       throw std::logic_error("The solver is broken.");
