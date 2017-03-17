@@ -463,10 +463,12 @@ matrix read_data(std::string path) {
   int n;
   if (ifs >> n) {
     matrix cc(n);
-    for (int c, x = 0; ifs >> c; ++x) {
-      const auto i = x / n;
-      const auto j = x % n;
+    for (int c, i = 0, j = 0; ifs >> c; ++j) {
       cc[i][j] = c;
+      if (j == n - 1) {
+        j = -1;
+        ++i;
+      }
     }
     return cc;
   } else {
