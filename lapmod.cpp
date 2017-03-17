@@ -92,31 +92,25 @@ private:
 
 const int inf = std::numeric_limits<int>::max();
 const int pp = 39;
-const int maxpp = 61;
 
 class problem {
 public:
   problem() = delete;
   problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), maxpp),
-        kk_(cost_matrix_->width(), maxpp), d_{new int[cost_matrix_->height()]},
-        unused_{new int[cost_matrix_->height()]},
-        lab_{new int[cost_matrix_->height()]},
-        number_{new int[cost_matrix_->height()]},
-        todo_{new int[cost_matrix_->height()]},
-        u_{new int[cost_matrix_->height()]}, v_{new int[cost_matrix_->width()]},
-        x_{}, y_{new int[cost_matrix_->width()]},
-        ok_{new int[cost_matrix_->height()]} {}
+      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), pp + 1),
+        kk_(cost_matrix_->width(), pp + 1),
+        data_{new int[8 * cost_matrix_->width()]}, d_{data_},
+        unused_{data_ + cost_matrix_->width()},
+        lab_{data_ + 2 * cost_matrix_->width()},
+        number_{data_ + 3 * cost_matrix_->width()},
+        todo_{data_ + 4 * cost_matrix_->width()},
+        u_{data_ + 5 * cost_matrix_->width()},
+        v_{data_ + 6 * cost_matrix_->width()},
+        y_{data_ + 7 * cost_matrix_->width()}, x_{},
+        ok_{new bool[cost_matrix_->height()]} {}
   ~problem() {
-    delete[] d_;
-    delete[] unused_;
-    delete[] lab_;
-    delete[] number_;
-    delete[] todo_;
-    delete[] u_;
-    delete[] v_;
+    delete[] data_;
     delete[] x_;
-    delete[] y_;
     delete[] ok_;
   }
 
@@ -454,6 +448,7 @@ private:
   const matrix *cost_matrix_;
   mutable matrix cc_;
   mutable matrix kk_;
+  int *data_;
   int *d_;
   int *unused_;
   int *lab_;
@@ -461,9 +456,9 @@ private:
   int *todo_;
   int *u_;
   int *v_;
-  mutable int *x_;
   int *y_;
-  int *ok_;
+  mutable int *x_;
+  bool *ok_;
 };
 
 matrix read_data(std::string path) {
