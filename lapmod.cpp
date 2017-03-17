@@ -18,8 +18,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -43,7 +43,7 @@
 class matrix {
 public:
   matrix() : height_{}, width_{}, data_{nullptr} {}
-  matrix(const matrix &other) = delete;
+  matrix(const matrix &) = delete;
   matrix(matrix &&other)
       : height_{other.height_}, width_{other.width_}, data_{other.data_} {
     other.data_ = nullptr;
@@ -64,7 +64,7 @@ public:
     });
   }
 
-  matrix &operator=(const matrix &other) = delete;
+  matrix &operator=(const matrix &) = delete;
 
   matrix &operator=(matrix &&other) {
     height_ = other.height_;
@@ -95,9 +95,7 @@ const int maxpp = 61;
 
 class problem {
 public:
-  problem()
-      : cost_matrix_{nullptr}, cc_(), kk_(), d_{}, unused_{}, lab_{}, number_{},
-        todo_{}, u_{}, v_{}, x_{}, y_{}, ok_{}, z_{-1} {}
+  problem() = delete;
   problem(const matrix *cost_matrix)
       : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), maxpp),
         kk_(cost_matrix_->width(), maxpp), d_{new int[cost_matrix_->height()]},
@@ -106,10 +104,8 @@ public:
         number_{new int[cost_matrix_->height()]},
         todo_{new int[cost_matrix_->height()]},
         u_{new int[cost_matrix_->height()]}, v_{new int[cost_matrix_->width()]},
-        x_{new int[cost_matrix_->height()]}, y_{new int[cost_matrix_->width()]},
-        ok_{new int[cost_matrix_->height()]}, z_{-1} {
-    std::fill(v_, v_ + cost_matrix_->width(), inf);
-  }
+        x_{}, y_{new int[cost_matrix_->width()]},
+        ok_{new int[cost_matrix_->height()]}, z_{-1} {}
   ~problem() {
     delete[] d_;
     delete[] unused_;
@@ -123,12 +119,57 @@ public:
     delete[] ok_;
   }
 
-  void selpp_cr() {
+  class solution {
+  public:
+    solution() = delete;
+    solution(const solution &) = delete;
+    solution(solution &&other) : s_{other.s_}, l_{other.l_}, c_{other.c_} {
+      other.s_ = nullptr;
+    }
+    ~solution() { delete[] s_; }
+
+    solution &operator=(const solution &) = delete;
+    solution &operator=(solution &&other) {
+      s_ = other.s_;
+      l_ = other.l_;
+      c_ = other.c_;
+      other.s_ = nullptr;
+    }
+
+    const int *data() const { return s_; }
+    int size() const { return l_; }
+    long value() const { return c_; }
+
+  private:
+    friend class problem;
+    solution(int **x, const matrix *c, const int *v, const int *u)
+        : s_{*x}, l_{c->height()},
+          c_{std::accumulate(v, v + c->width(),
+                             std::accumulate(u, u + c->height(), 0l))} {
+      *x = nullptr;
+    }
+
+    const int *s_;
+    int l_;
+    long c_;
+  };
+
+  solution solve() const {
+    selpp_cr();
+    augmentation(arr(transfer()));
+    return solution(&x_, cost_matrix_, v_, u_);
+  }
+
+private:
+  void selpp_cr() const {
     auto t = -1;
-    auto end = std::min(cost_matrix_->width(), pp);
+    const auto end = std::min(cost_matrix_->width(), pp);
+
+    std::fill(v_, v_ + cost_matrix_->width(), inf);
+    x_ = new int[cost_matrix_->height()];
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
-      auto s = 0ul;
+      auto s = 0l;
       for (auto j = 0; j != end; ++j) {
         cc_[i][j] = (*cost_matrix_)[i][j];
         kk_[i][j] = j + 1;
@@ -190,7 +231,7 @@ public:
     }
   }
 
-  int transfer() {
+  int transfer() const {
     auto l = -1;
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
@@ -217,7 +258,7 @@ public:
     return l;
   }
 
-  int arr(int l) {
+  int arr(int l) const {
     for (auto cnt = 0; cnt != 2; ++cnt) {
       auto h = 0;
       const auto l0 = l;
@@ -268,7 +309,7 @@ public:
     return l;
   }
 
-  void augmentation(int l) {
+  void augmentation(int l) const {
     int i, j;
     do {
       for (auto l0 = l + 1, l = 0; l < l0; ++l) {
@@ -299,7 +340,7 @@ public:
         for (auto h = 0; h != td1 + 1; ++h) {
           j = todo_[h];
           if (y_[j] == 0) {
-            goto augment_2;
+            goto augment;
           }
           ok_[j] = true;
         }
@@ -321,7 +362,7 @@ public:
                 lab_[j] = i;
                 if (vj == min) {
                   if (y_[j] == 0) {
-                    goto augment_1;
+                    goto price_update;
                   }
                   todo_[++td1] = j;
                   ok_[j] = true;
@@ -345,18 +386,18 @@ public:
             for (auto h = 0; h != td1 + 1; ++h) {
               j = todo_[h];
               if (y_[j] == 0) {
-                goto augment_1;
+                goto price_update;
               }
               ok_[j] = true;
             }
           }
         } while (true);
-      augment_1:
+      price_update:
         for (auto k = last; k < cost_matrix_->width(); ++k) {
           const auto j0 = todo_[k];
           v_[j0] = v_[j0] + d_[j0] - min;
         }
-      augment_2:
+      augment:
         do {
           i = lab_[j];
           y_[j] = i + 1;
@@ -378,7 +419,7 @@ public:
     } while (l >= 0);
   }
 
-  int optcheck() {
+  int optcheck() const {
     auto l = -1;
     auto newfree = false;
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
@@ -403,20 +444,11 @@ public:
     return l;
   }
 
-  const int *solution() const { return x_; }
   int size() const { return cost_matrix_->height(); }
-  int value() const {
-    return z_ < 0
-               ? z_ = std::accumulate(
-                     v_, v_ + cost_matrix_->width(),
-                     std::accumulate(u_, u_ + cost_matrix_->height(), 0))
-               : z_;
-  }
 
-private:
   const matrix *cost_matrix_;
-  matrix cc_;
-  matrix kk_;
+  mutable matrix cc_;
+  mutable matrix kk_;
   int *d_;
   int *unused_;
   int *lab_;
@@ -424,10 +456,10 @@ private:
   int *todo_;
   int *u_;
   int *v_;
-  int *x_;
+  mutable int *x_;
   int *y_;
   int *ok_;
-  mutable int z_;
+  int z_;
 };
 
 matrix read_data(std::string path) {
@@ -447,24 +479,23 @@ matrix read_data(std::string path) {
 }
 
 int main() {
-  int answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
+  long answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
   for (auto i = 0; i < sizeof(answer) / sizeof(answer[0]); ++i) {
     auto m = read_data(std::string("problems/assign") +
                        std::to_string(100 * (i + 1)) + std::string(".txt"));
     problem p(&m);
-    p.selpp_cr();
-    p.augmentation(p.arr(p.transfer()));
 
-    auto begin = p.solution();
+    auto sol = p.solve();
+    auto begin = sol.data();
     std::cout << '[' << *begin++ - 1;
-    for (auto end = begin + p.size() - 1; begin != end; ++begin) {
+    for (auto end = begin + sol.size() - 1; begin != end; ++begin) {
       std::cout << ", " << *begin - 1;
     }
     std::cout << "]\n";
 
-    std::cout << p.value() << '\n';
+    std::cout << sol.value() << '\n';
 
-    if (p.value() != answer[i]) {
+    if (sol.value() != answer[i]) {
       throw std::logic_error("The solver is broken.");
     }
   }
