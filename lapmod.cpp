@@ -420,9 +420,8 @@ private:
 
   int optcheck() const {
     auto l = -1;
-    auto newfree = false;
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
-      newfree = false;
+      auto newfree = false;
 
       for (auto j = 0; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < u_[i] + v_[j]) {
