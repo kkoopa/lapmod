@@ -79,8 +79,8 @@ public:
 
   int height() const { return height_; }
   int width() const { return width_; }
-  int *operator[](std::ptrdiff_t index) { return &data_[index * width_]; }
-  const int *operator[](std::ptrdiff_t index) const {
+  int *operator[](int index) { return &data_[index * width_]; }
+  const int *operator[](int index) const {
     return &data_[index * width_];
   }
 
