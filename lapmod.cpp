@@ -163,7 +163,6 @@ public:
 
 private:
   void selpp_cr() const {
-    auto t = -1;
     const auto end = cost_matrix_->width() >> 5 == 0
                          ? cost_matrix_->width()
                          : cost_matrix_->width() >> 5;
@@ -183,7 +182,7 @@ private:
 
       for (auto j = end; j < cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < cr) {
-          auto h = 0;
+          auto h = 0, t = -1;
           do {
             t = t >= end - 1 ? 0 : t + 1;
             h = cc_[i][t];
@@ -198,7 +197,7 @@ private:
       x_[i] = 0;
       auto diag = (*cost_matrix_)[i][i];
 
-      for (t = 0; t != end; ++t) {
+      for (auto t = 0; t != end; ++t) {
         const auto j = kk_[i][t] - 1;
         if (cc_[i][t] < v_[j]) {
           v_[j] = cc_[i][t];
@@ -217,7 +216,6 @@ private:
           y_[i] = i + 1;
         }
       }
-      t = -1;
     }
 
     for (auto j = cost_matrix_->width(); j > 0; --j) {
@@ -310,14 +308,14 @@ private:
   }
 
   void augmentation(int l) const {
-    int i, j;
     do {
-      auto l0 = l + 1;
+      const auto l0 = l + 1;
       for (l = 0; l < l0; ++l) {
+        int j;
         std::fill_n(d_, cost_matrix_->height(), inf);
         std::fill_n(ok_, cost_matrix_->height(), false);
         auto min = inf;
-        auto i0 = unused_[l];
+        const auto i0 = unused_[l];
         auto td1 = -1;
 
         for (auto t = 0u; t != kk_[i0].size(); ++t) {
@@ -348,7 +346,7 @@ private:
 
         do {
           const auto j0 = todo_[td1--];
-          i = y_[j0] - 1;
+          const auto i = y_[j0] - 1;
           todo_[td2--] = j0;
 
           auto t = 0u;
@@ -400,17 +398,18 @@ private:
           v_[j0] = v_[j0] + d_[j0] - min;
         }
       augment:
+        int i;
         do {
           i = lab_[j];
           y_[j] = i + 1;
-          auto k = j + 1;
+          const auto k = j + 1;
           j = x_[i] - 1;
           x_[i] = k;
         } while (i != i0);
       }
 
-      for (i = 0; i != cost_matrix_->height(); ++i) {
-        j = x_[i] - 1;
+      for (auto i = 0; i != cost_matrix_->height(); ++i) {
+        const auto j = x_[i] - 1;
         auto t = 0;
         for (; kk_[i][t] != j + 1; ++t)
           ;
