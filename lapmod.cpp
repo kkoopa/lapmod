@@ -94,6 +94,7 @@ const int inf = std::numeric_limits<int>::max();
 class problem {
 public:
   problem() = delete;
+  problem(const problem &) = delete;
   problem(const matrix *cost_matrix)
       : cost_matrix_(cost_matrix), cc_(cost_matrix_->height()),
         kk_(cost_matrix_->height()), data_{new int[7 * cost_matrix_->width()]},
@@ -117,6 +118,8 @@ public:
     delete[] x_;
     delete[] ok_;
   }
+
+  problem &operator=(const problem &) = delete;
 
   class solution {
   public:
