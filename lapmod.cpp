@@ -40,6 +40,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 class matrix {
 public:
@@ -94,17 +95,23 @@ class problem {
 public:
   problem() = delete;
   problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), cost_matrix_->width()),
-        kk_(cost_matrix_->height(), cost_matrix_->width()),
-        data_{new int[8 * cost_matrix_->width()]}, d_{data_},
-        unused_{data_ + cost_matrix_->width()},
+      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height()),
+        kk_(cost_matrix_->height()), data_{new int[7 * cost_matrix_->width()]},
+        d_{data_}, unused_{data_ + cost_matrix_->width()},
         lab_{data_ + 2 * cost_matrix_->width()},
-        number_{data_ + 3 * cost_matrix_->width()},
-        todo_{data_ + 4 * cost_matrix_->width()},
-        u_{data_ + 5 * cost_matrix_->width()},
-        v_{data_ + 6 * cost_matrix_->width()},
-        y_{data_ + 7 * cost_matrix_->width()}, x_{},
-        ok_{new bool[cost_matrix_->height()]} {}
+        todo_{data_ + 3 * cost_matrix_->width()},
+        u_{data_ + 4 * cost_matrix_->width()},
+        v_{data_ + 5 * cost_matrix_->width()},
+        y_{data_ + 6 * cost_matrix_->width()}, x_{},
+        ok_{new bool[cost_matrix_->height()]} {
+    const auto n = cc_.size() >> 5 == 0 ? cc_.size() : (cc_.size() >> 5) + 1;
+    for (auto &v : cc_) {
+      v.reserve(n);
+    }
+    for (auto &v : kk_) {
+      v.reserve(n);
+    }
+  }
   ~problem() {
     delete[] data_;
     delete[] x_;
@@ -167,8 +174,8 @@ private:
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       auto s = 0l;
       for (auto j = 0; j != end; ++j) {
-        cc_[i][j] = (*cost_matrix_)[i][j];
-        kk_[i][j] = j + 1;
+        cc_[i].push_back((*cost_matrix_)[i][j]);
+        kk_[i].push_back(j + 1);
         s += (*cost_matrix_)[i][j];
       }
 
@@ -203,17 +210,14 @@ private:
       }
 
       if (diag < inf) {
-        t = end;
-        cc_[i][t] = diag;
-        kk_[i][t] = i + 1;
+        cc_[i].push_back(diag);
+        kk_[i].push_back(i + 1);
         if (diag < v_[i]) {
           v_[i] = diag;
           y_[i] = i + 1;
         }
-      } else {
-        t = end - 1;
       }
-      number_[i] = t + 1;
+      t = -1;
     }
 
     for (auto j = cost_matrix_->width(); j > 0; --j) {
@@ -238,7 +242,7 @@ private:
       } else {
         auto min = inf;
         const auto j1 = x_[i] - 1;
-        for (auto t = 0; t != number_[i]; ++t) {
+        for (auto t = 0u; t != kk_[i].size(); ++t) {
           const auto j = kk_[i][t] - 1;
           if (j != j1 && cc_[i][t] - v_[j] < min) {
             min = cc_[i][t] - v_[j];
@@ -265,7 +269,7 @@ private:
         auto v0 = inf, vj = inf;
         auto j0 = -1, j1 = -1;
 
-        for (auto t = 0; t != number_[i]; ++t) {
+        for (auto t = 0u; t != kk_[i].size(); ++t) {
           const auto j = kk_[i][t] - 1, dj = cc_[i][t] - v_[j];
 
           if (dj < vj) {
@@ -316,7 +320,7 @@ private:
         auto i0 = unused_[l];
         auto td1 = -1;
 
-        for (auto t = 0; t != number_[i0]; ++t) {
+        for (auto t = 0u; t != kk_[i0].size(); ++t) {
           j = kk_[i0][t] - 1;
           const auto dj = cc_[i0][t] - v_[j];
           d_[j] = dj;
@@ -347,11 +351,11 @@ private:
           i = y_[j0] - 1;
           todo_[td2--] = j0;
 
-          auto t = 0;
+          auto t = 0u;
           for (; kk_[i][t] != j0 + 1; ++t)
             ;
           auto h = cc_[i][t] - v_[j0] - min;
-          for (t = 0; t != number_[i]; ++t) {
+          for (t = 0; t != kk_[i].size(); ++t) {
             j = kk_[i][t] - 1;
             if (!ok_[j]) {
               const auto vj = cc_[i][t] - v_[j] - h;
@@ -424,9 +428,8 @@ private:
 
       for (auto j = 0; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < u_[i] + v_[j]) {
-          cc_[i][number_[i]] = (*cost_matrix_)[i][j];
-          kk_[i][number_[i]] = j + 1;
-          ++number_[i];
+          cc_[i].push_back((*cost_matrix_)[i][j]);
+          kk_[i].push_back(j + 1);
           newfree = true;
         }
       }
@@ -444,13 +447,12 @@ private:
   int size() const { return cost_matrix_->height(); }
 
   const matrix *cost_matrix_;
-  mutable matrix cc_;
-  mutable matrix kk_;
+  mutable std::vector<std::vector<int>> cc_;
+  mutable std::vector<std::vector<int>> kk_;
   int *data_;
   int *d_;
   int *unused_;
   int *lab_;
-  int *number_;
   int *todo_;
   int *u_;
   int *v_;
