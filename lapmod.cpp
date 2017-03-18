@@ -105,7 +105,7 @@ public:
         v_{data_ + 5 * cost_matrix_->width()},
         y_{data_ + 6 * cost_matrix_->width()}, x_{},
         ok_(cost_matrix_->height()) {
-    const auto n = cc_.size() >> 5 == 0 ? cc_.size() : (cc_.size() >> 5) + 1;
+    const auto n = cc_.size() >> 5 < 2 ? cc_.size() : (cc_.size() >> 5) + 1;
     for (auto &v : cc_) {
       v.reserve(n);
     }
@@ -165,7 +165,7 @@ public:
 
 private:
   void selpp_cr() const {
-    const auto end = cost_matrix_->width() >> 5 == 0
+    const auto end = cost_matrix_->width() >> 5 < 2
                          ? cost_matrix_->width()
                          : cost_matrix_->width() >> 5;
 
@@ -182,7 +182,7 @@ private:
 
       auto cr = s / end;
 
-      for (auto j = end; j < cost_matrix_->width(); ++j) {
+      for (auto j = end; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < cr) {
           auto h = 0, t = -1;
           do {
