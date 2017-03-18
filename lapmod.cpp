@@ -89,14 +89,13 @@ private:
 };
 
 const int inf = std::numeric_limits<int>::max();
-const int pp = 39;
 
 class problem {
 public:
   problem() = delete;
   problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), pp + 1),
-        kk_(cost_matrix_->width(), pp + 1),
+      : cost_matrix_(cost_matrix), cc_(cost_matrix_->height(), cost_matrix_->width()),
+        kk_(cost_matrix_->height(), cost_matrix_->width()),
         data_{new int[8 * cost_matrix_->width()]}, d_{data_},
         unused_{data_ + cost_matrix_->width()},
         lab_{data_ + 2 * cost_matrix_->width()},
@@ -158,7 +157,9 @@ public:
 private:
   void selpp_cr() const {
     auto t = -1;
-    const auto end = std::min(cost_matrix_->width(), pp);
+    const auto end = cost_matrix_->width() >> 5 == 0
+                         ? cost_matrix_->width()
+                         : cost_matrix_->width() >> 5;
 
     std::fill(v_, v_ + cost_matrix_->width(), inf);
     x_ = new int[cost_matrix_->height()];
@@ -173,17 +174,17 @@ private:
 
       auto cr = s / end;
 
-      for (auto j = pp; j < cost_matrix_->width(); ++j) {
+      for (auto j = end; j < cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < cr) {
           auto h = 0;
           do {
-            t = t >= pp - 1 ? 0 : t + 1;
+            t = t >= end - 1 ? 0 : t + 1;
             h = cc_[i][t];
           } while (h < cr);
           cc_[i][t] = (*cost_matrix_)[i][j];
           kk_[i][t] = j + 1;
           s = s - h + (*cost_matrix_)[i][j];
-          cr = s / pp;
+          cr = s / end;
         }
       }
 
@@ -423,10 +424,10 @@ private:
 
       for (auto j = 0; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < u_[i] + v_[j]) {
-          number_[i] = number_[i] < cost_matrix_->height() ? number_[i] + 1 : 0;
-          newfree = true;
           cc_[i][number_[i]] = (*cost_matrix_)[i][j];
           kk_[i][number_[i]] = j + 1;
+          ++number_[i];
+          newfree = true;
         }
       }
 
