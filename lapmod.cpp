@@ -104,7 +104,7 @@ public:
         u_{data_ + 4 * cost_matrix_->width()},
         v_{data_ + 5 * cost_matrix_->width()},
         y_{data_ + 6 * cost_matrix_->width()}, x_{},
-        ok_{new bool[cost_matrix_->height()]} {
+        ok_(cost_matrix_->height()) {
     const auto n = cc_.size() >> 5 == 0 ? cc_.size() : (cc_.size() >> 5) + 1;
     for (auto &v : cc_) {
       v.reserve(n);
@@ -116,7 +116,6 @@ public:
   ~problem() {
     delete[] data_;
     delete[] x_;
-    delete[] ok_;
   }
 
   problem &operator=(const problem &) = delete;
@@ -316,7 +315,7 @@ private:
       for (l = 0; l < l0; ++l) {
         int j;
         std::fill_n(d_, cost_matrix_->height(), inf);
-        std::fill_n(ok_, cost_matrix_->height(), false);
+        std::fill(ok_.begin(), ok_.end(), false);
         auto min = inf;
         const auto i0 = unused_[l];
         auto td1 = -1;
@@ -460,7 +459,7 @@ private:
   int *const v_;
   int *const y_;
   mutable int *x_;
-  bool *ok_;
+  mutable std::vector<bool> ok_;
 };
 
 matrix read_data(std::string path) {
