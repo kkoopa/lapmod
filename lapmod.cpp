@@ -168,7 +168,7 @@ private:
                          ? cost_matrix_->width()
                          : cost_matrix_->width() >> 5;
 
-    std::fill(v_, v_ + cost_matrix_->width(), inf);
+    std::fill_n(v_, cost_matrix_->width(), inf);
     x_ = new int[cost_matrix_->height()];
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
