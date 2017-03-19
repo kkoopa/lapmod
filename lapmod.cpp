@@ -100,7 +100,7 @@ public:
   problem() = delete;
   problem(const problem &) = delete;
   problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), kk_(cost_matrix_->height()),
+      : cost_matrix_(cost_matrix), kk_(cost_matrix_->width()),
         data_{new int[7 * cost_matrix_->width()]}, d_{data_},
         unused_{data_ + cost_matrix_->width()},
         lab_{data_ + 2 * cost_matrix_->width()},
