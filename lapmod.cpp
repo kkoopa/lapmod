@@ -51,7 +51,7 @@ public:
       : height_{other.height_}, width_{other.width_}, data_{other.data_} {
     other.data_ = nullptr;
   }
-  matrix(int n) : height_{n}, width_{n}, data_{new int[height_ * width_]} {}
+  matrix(int n) : matrix(n, n) {}
   matrix(int height, int width)
       : height_{height}, width_{width}, data_{new int[height_ * width_]} {}
   matrix(std::initializer_list<std::initializer_list<int>> l)
