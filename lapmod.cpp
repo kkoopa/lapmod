@@ -69,14 +69,7 @@ public:
   }
 
   matrix &operator=(const matrix &) = delete;
-
-  matrix &operator=(matrix &&other) noexcept {
-    height_ = other.height_;
-    width_ = other.width_;
-    data_ = other.data_;
-    other.data_ = nullptr;
-    return *this;
-  }
+  matrix &operator=(matrix &&other) = delete;
 
   ~matrix() { delete[] data_; }
 
@@ -102,8 +95,8 @@ private:
     os << ']';
     return os;
   }
-  int height_;
-  int width_;
+  const int height_;
+  const int width_;
   int *data_;
 };
 
