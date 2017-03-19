@@ -107,7 +107,7 @@ public:
   problem() = delete;
   problem(const problem &) = delete;
   explicit problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), kk_(cost_matrix_->width()),
+      : cost_matrix_(cost_matrix), kk_(cost_matrix_->height()),
         data_{new int[7 * cost_matrix_->width()]}, d_{data_},
         unused_{data_ + cost_matrix_->width()},
         lab_{data_ + 2 * cost_matrix_->width()},
