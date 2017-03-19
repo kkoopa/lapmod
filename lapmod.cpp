@@ -103,8 +103,7 @@ public:
         todo_{data_ + 3 * cost_matrix_->width()},
         u_{data_ + 4 * cost_matrix_->width()},
         v_{data_ + 5 * cost_matrix_->width()},
-        y_{data_ + 6 * cost_matrix_->width()}, x_{},
-        ok_(cost_matrix_->height()) {
+        y_{data_ + 6 * cost_matrix_->width()}, x_{} {
     const auto n = cc_.size() >> 5 < 2 ? cc_.size() : (cc_.size() >> 5) + 1;
     for (auto &v : cc_) {
       v.reserve(n);
@@ -310,12 +309,13 @@ private:
   }
 
   void augmentation(int l) const {
+    std::vector<bool> ok(cost_matrix_->height());
     do {
       const auto l0 = l + 1;
       for (l = 0; l < l0; ++l) {
         int j;
         std::fill_n(d_, cost_matrix_->height(), inf);
-        std::fill(ok_.begin(), ok_.end(), false);
+        std::fill(ok.begin(), ok.end(), false);
         auto min = inf;
         const auto i0 = unused_[l];
         auto td1 = -1;
@@ -343,7 +343,7 @@ private:
           if (y_[j] == 0) {
             goto augment;
           }
-          ok_[j] = true;
+          ok[j] = true;
         }
 
         do {
@@ -357,7 +357,7 @@ private:
           auto h = cc_[i][t] - v_[j0] - min;
           for (t = 0; t != kk_[i].size(); ++t) {
             j = kk_[i][t] - 1;
-            if (!ok_[j]) {
+            if (!ok[j]) {
               const auto vj = cc_[i][t] - v_[j] - h;
               if (vj < d_[j]) {
                 d_[j] = vj;
@@ -367,7 +367,7 @@ private:
                     goto price_update;
                   }
                   todo_[++td1] = j;
-                  ok_[j] = true;
+                  ok[j] = true;
                 }
               }
             }
@@ -377,7 +377,7 @@ private:
             min = inf - 1;
             last = td2 + 1;
             for (j = 0; j != cost_matrix_->width(); ++j) {
-              if (d_[j] <= min && !ok_[j]) {
+              if (d_[j] <= min && !ok[j]) {
                 if (d_[j] < min) {
                   td1 = -1;
                   min = d_[j];
@@ -390,7 +390,7 @@ private:
               if (y_[j] == 0) {
                 goto price_update;
               }
-              ok_[j] = true;
+              ok[j] = true;
             }
           }
         } while (true);
@@ -459,7 +459,6 @@ private:
   int *const v_;
   int *const y_;
   mutable int *x_;
-  mutable std::vector<bool> ok_;
 };
 
 matrix read_data(std::string path) {
