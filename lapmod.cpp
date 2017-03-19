@@ -412,7 +412,7 @@ private:
           v_[j0] = v_[j0] + d_[j0] - min;
         }
       augment:
-        int i;
+        auto i = -1;
         do {
           i = lab_[j];
           y_[j] = i + 1;
@@ -471,10 +471,10 @@ private:
 
 lapmod::matrix read_data(const std::string &path) {
   std::ifstream ifs(path);
-  int n;
+  auto n = 0;
   if (ifs >> n) {
     lapmod::matrix cc(n);
-    for (int c, i = 0, j = 0; ifs >> c; ++j) {
+    for (auto c = 0, i = 0, j = 0; ifs >> c; ++j) {
       cc[i][j] = c;
       if (j == n - 1) {
         j = -1;
