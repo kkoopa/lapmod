@@ -311,8 +311,8 @@ private:
   void augmentation(int l) const {
     std::vector<bool> ok(cost_matrix_->height());
     do {
-      const auto l0 = l + 1;
-      for (l = 0; l < l0; ++l) {
+      const auto l0 = l;
+      for (l = 0; l <= l0; ++l) {
         int j;
         std::fill_n(d_, cost_matrix_->height(), inf);
         std::fill(ok.begin(), ok.end(), false);
