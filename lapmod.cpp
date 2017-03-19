@@ -175,7 +175,7 @@ private:
       auto s = 0l;
       for (auto j = 0; j != end; ++j) {
         cc_[i].push_back((*cost_matrix_)[i][j]);
-        kk_[i].push_back(j + 1);
+        kk_[i].push_back(j);
         s += (*cost_matrix_)[i][j];
       }
 
@@ -189,7 +189,7 @@ private:
             h = cc_[i][t];
           } while (h < cr);
           cc_[i][t] = (*cost_matrix_)[i][j];
-          kk_[i][t] = j + 1;
+          kk_[i][t] = j;
           s = s - h + (*cost_matrix_)[i][j];
           cr = s / end;
         }
@@ -199,7 +199,7 @@ private:
       auto diag = (*cost_matrix_)[i][i];
 
       for (auto t = 0; t != end; ++t) {
-        const auto j = kk_[i][t] - 1;
+        const auto j = kk_[i][t];
         if (cc_[i][t] < v_[j]) {
           v_[j] = cc_[i][t];
           y_[j] = i + 1;
@@ -211,7 +211,7 @@ private:
 
       if (diag < inf) {
         cc_[i].push_back(diag);
-        kk_[i].push_back(i + 1);
+        kk_[i].push_back(i);
         if (diag < v_[i]) {
           v_[i] = diag;
           y_[i] = i + 1;
@@ -242,13 +242,13 @@ private:
         auto min = inf;
         const auto j1 = x_[i] - 1;
         for (auto t = 0u; t != kk_[i].size(); ++t) {
-          const auto j = kk_[i][t] - 1;
+          const auto j = kk_[i][t];
           if (j != j1 && cc_[i][t] - v_[j] < min) {
             min = cc_[i][t] - v_[j];
           }
         }
         auto t = 0;
-        for (; kk_[i][t] != j1 + 1; ++t)
+        for (; kk_[i][t] != j1; ++t)
           ;
         v_[j1] = cc_[i][t] - min;
       }
@@ -269,7 +269,7 @@ private:
         auto j0 = -1, j1 = -1;
 
         for (auto t = 0u; t != kk_[i].size(); ++t) {
-          const auto j = kk_[i][t] - 1, dj = cc_[i][t] - v_[j];
+          const auto j = kk_[i][t], dj = cc_[i][t] - v_[j];
 
           if (dj < vj) {
             if (dj >= v0) {
@@ -321,7 +321,7 @@ private:
         auto td1 = -1;
 
         for (auto t = 0u; t != kk_[i0].size(); ++t) {
-          j = kk_[i0][t] - 1;
+          j = kk_[i0][t];
           const auto dj = cc_[i0][t] - v_[j];
           d_[j] = dj;
           lab_[j] = i0;
@@ -352,12 +352,12 @@ private:
           todo_[td2--] = j0;
 
           auto t = 0u;
-          for (; kk_[i][t] != j0 + 1; ++t)
+          for (; kk_[i][t] != j0; ++t)
             ;
 
           const auto hh = cc_[i][t] - v_[j0] - min;
           for (t = 0; t != kk_[i].size(); ++t) {
-            j = kk_[i][t] - 1;
+            j = kk_[i][t];
             if (!ok[j]) {
               const auto vj = cc_[i][t] - v_[j] - hh;
               if (vj < d_[j]) {
@@ -414,7 +414,7 @@ private:
       for (auto i = 0; i != cost_matrix_->height(); ++i) {
         const auto j = x_[i] - 1;
         auto t = 0;
-        for (; kk_[i][t] != j + 1; ++t)
+        for (; kk_[i][t] != j; ++t)
           ;
         u_[i] = cc_[i][t] - v_[j];
       }
@@ -431,7 +431,7 @@ private:
       for (auto j = 0; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < u_[i] + v_[j]) {
           cc_[i].push_back((*cost_matrix_)[i][j]);
-          kk_[i].push_back(j + 1);
+          kk_[i].push_back(j);
           newfree = true;
         }
       }
