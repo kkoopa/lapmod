@@ -453,7 +453,7 @@ private:
 };
 } // namespace lapmod
 
-lapmod::matrix read_data(std::string path) {
+lapmod::matrix read_data(const std::string &path) {
   std::ifstream ifs(path);
   int n;
   if (ifs >> n) {
