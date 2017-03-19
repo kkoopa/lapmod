@@ -45,10 +45,11 @@
 namespace lapmod {
 class matrix {
 public:
-  matrix() : height_{}, width_{}, data_{nullptr} {}
+  matrix() noexcept : height_{}, width_{}, data_{nullptr} {}
   matrix(const matrix &) = delete;
-  matrix(matrix &&other)
-      : height_{other.height_}, width_{other.width_}, data_{other.data_} {
+  matrix(matrix &&other) noexcept : height_{other.height_},
+                                    width_{other.width_},
+                                    data_{other.data_} {
     other.data_ = nullptr;
   }
   matrix(int n) : matrix(n, n) {}
@@ -69,7 +70,7 @@ public:
 
   matrix &operator=(const matrix &) = delete;
 
-  matrix &operator=(matrix &&other) {
+  matrix &operator=(matrix &&other) noexcept {
     height_ = other.height_;
     width_ = other.width_;
     data_ = other.data_;
@@ -79,10 +80,12 @@ public:
 
   ~matrix() { delete[] data_; }
 
-  int height() const { return height_; }
-  int width() const { return width_; }
-  int *operator[](int index) { return &data_[index * width_]; }
-  const int *operator[](int index) const { return &data_[index * width_]; }
+  int height() const noexcept { return height_; }
+  int width() const noexcept { return width_; }
+  int *operator[](int index) noexcept { return &data_[index * width_]; }
+  const int *operator[](int index) const noexcept {
+    return &data_[index * width_];
+  }
 
 private:
   int height_;
@@ -124,13 +127,15 @@ public:
   public:
     solution() = delete;
     solution(const solution &) = delete;
-    solution(solution &&other) : s_{other.s_}, l_{other.l_}, c_{other.c_} {
+    solution(solution &&other) noexcept : s_{other.s_},
+                                          l_{other.l_},
+                                          c_{other.c_} {
       other.s_ = nullptr;
     }
     ~solution() { delete[] s_; }
 
     solution &operator=(const solution &) = delete;
-    solution &operator=(solution &&other) {
+    solution &operator=(solution &&other) noexcept {
       s_ = other.s_;
       l_ = other.l_;
       c_ = other.c_;
@@ -139,14 +144,15 @@ public:
       return *this;
     }
 
-    const int *data() const { return s_; }
-    int size() const { return l_; }
-    long value() const { return c_; }
+    const int *data() const noexcept { return s_; }
+    int size() const noexcept { return l_; }
+    long value() const noexcept { return c_; }
 
   private:
     friend class problem;
-    solution(int **x, const matrix *c, const int *v, const int *u)
-        : s_{*x}, l_{c->height()},
+    solution(int **x, const matrix *c, const int *v, const int *u) noexcept
+        : s_{*x},
+          l_{c->height()},
           c_{std::accumulate(v, v + c->width(),
                              std::accumulate(u, u + c->height(), 0l))} {
       *x = nullptr;
@@ -231,7 +237,7 @@ private:
     }
   }
 
-  int transfer() const {
+  int transfer() const noexcept {
     auto l = -1;
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
@@ -258,7 +264,7 @@ private:
     return l;
   }
 
-  int arr(int l) const {
+  int arr(int l) const noexcept {
     for (auto cnt = 0; cnt != 2; ++cnt) {
       auto h = 0;
       const auto l0 = l;
@@ -424,7 +430,7 @@ private:
     } while (l >= 0);
   }
 
-  int optcheck() const {
+  int optcheck() const noexcept {
     auto l = -1;
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       auto newfree = false;
@@ -447,7 +453,7 @@ private:
     return l;
   }
 
-  int size() const { return cost_matrix_->height(); }
+  int size() const noexcept { return cost_matrix_->height(); }
 
   const matrix *const cost_matrix_;
   mutable std::vector<std::vector<int>> cc_;
