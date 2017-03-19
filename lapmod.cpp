@@ -88,6 +88,20 @@ public:
   }
 
 private:
+  friend std::ostream &operator<<(std::ostream &os, const matrix &m) noexcept {
+    os << '[' << m[0][0];
+    for (auto j = 1; j != m.width_; ++j) {
+      os << ", " << m[0][j];
+    }
+    for (auto i = 1; i != m.height_; ++i) {
+      os << "]\n[" << m[i][0];
+      for (auto j = 1; j != m.width_; ++j) {
+        os << ", " << m[i][j];
+      }
+    }
+    os << ']';
+    return os;
+  }
   int height_;
   int width_;
   int *data_;
@@ -154,6 +168,17 @@ public:
                              std::accumulate(u, u + c->height(), 0l))} {
       std::for_each(s_, s_ + c->height(), [](auto &n) { --n; });
       *x = nullptr;
+    }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const solution &s) noexcept {
+      auto begin = s.data();
+      os << '[' << *begin++;
+      for (const auto end = begin + s.size() - 1; begin != end; ++begin) {
+        os << ", " << *begin;
+      }
+      os << "]^T";
+      return os;
     }
 
     int *s_;
@@ -488,16 +513,8 @@ int main() {
     std::chrono::duration<double> elapsed_seconds =
         std::chrono::high_resolution_clock::now() - start;
 
-    auto begin = sol.data();
-    std::cout << '[' << *begin++;
-    for (const auto end = begin + sol.size() - 1; begin != end; ++begin) {
-      std::cout << ", " << *begin;
-    }
-    std::cout << "]\n";
-
-    std::cout << sol.value() << '\n';
-
-    std::cout << elapsed_seconds.count() << " s\n";
+    std::cout << "Solution: " << sol << "\nCost: " << sol.value()
+              << "\nDuration: " << elapsed_seconds.count() << " s\n";
 
     if (sol.value() != answer[i]) {
       throw std::logic_error("The solver is broken.");
