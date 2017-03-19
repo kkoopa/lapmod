@@ -52,10 +52,10 @@ public:
                                     data_{other.data_} {
     other.data_ = nullptr;
   }
-  matrix(int n) : matrix(n, n) {}
+  explicit matrix(int n) : matrix(n, n) {}
   matrix(int height, int width)
       : height_{height}, width_{width}, data_{new int[height_ * width_]} {}
-  matrix(std::initializer_list<std::initializer_list<int>> l)
+  explicit matrix(std::initializer_list<std::initializer_list<int>> l)
       : height_{static_cast<int>(l.size())},
         width_{static_cast<int>(l.begin()->size())},
         data_{new int[height_ * width_]} {
@@ -106,7 +106,7 @@ class problem {
 public:
   problem() = delete;
   problem(const problem &) = delete;
-  problem(const matrix *cost_matrix)
+  explicit problem(const matrix *cost_matrix)
       : cost_matrix_(cost_matrix), kk_(cost_matrix_->width()),
         data_{new int[7 * cost_matrix_->width()]}, d_{data_},
         unused_{data_ + cost_matrix_->width()},
