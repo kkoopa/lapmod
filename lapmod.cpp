@@ -328,7 +328,7 @@ private:
     do {
       const auto l0 = l;
       for (l = 0; l <= l0; ++l) {
-        int j;
+        auto j = -1;
         std::fill_n(d_, cost_matrix_->height(), inf);
         std::fill(ok.begin(), ok.end(), false);
         auto min = inf;
