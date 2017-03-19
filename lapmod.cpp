@@ -249,10 +249,7 @@ private:
             min = (*cost_matrix_)[i][j] - v_[j];
           }
         }
-        auto t = 0;
-        for (; kk_[i][t] != j1; ++t)
-          ;
-        v_[j1] = (*cost_matrix_)[i][kk_[i][t]] - min;
+        v_[j1] = (*cost_matrix_)[i][j1] - min;
       }
     }
 
@@ -353,12 +350,8 @@ private:
           const auto i = y_[j0] - 1;
           todo_[td2--] = j0;
 
-          auto t = 0u;
-          for (; kk_[i][t] != j0; ++t)
-            ;
-
-          const auto hh = (*cost_matrix_)[i][kk_[i][t]] - v_[j0] - min;
-          for (t = 0; t != kk_[i].size(); ++t) {
+          const auto hh = (*cost_matrix_)[i][j0] - v_[j0] - min;
+          for (auto t = 0; t != static_cast<int>(kk_[i].size()); ++t) {
             j = kk_[i][t];
             if (!ok[j]) {
               const auto vj = (*cost_matrix_)[i][j] - v_[j] - hh;
@@ -415,10 +408,7 @@ private:
 
       for (auto i = 0; i != cost_matrix_->height(); ++i) {
         const auto j = x_[i] - 1;
-        auto t = 0;
-        for (; kk_[i][t] != j; ++t)
-          ;
-        u_[i] = (*cost_matrix_)[i][kk_[i][t]] - v_[j];
+        u_[i] = (*cost_matrix_)[i][j] - v_[j];
       }
 
       l = optcheck();
