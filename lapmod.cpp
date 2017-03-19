@@ -155,6 +155,7 @@ public:
           l_{c->height()},
           c_{std::accumulate(v, v + c->width(),
                              std::accumulate(u, u + c->height(), 0l))} {
+      std::for_each(s_, s_ + c->height(), [](auto &n) { --n; });
       *x = nullptr;
     }
 
@@ -506,9 +507,9 @@ int main() {
         std::chrono::high_resolution_clock::now() - start;
 
     auto begin = sol.data();
-    std::cout << '[' << *begin++ - 1;
+    std::cout << '[' << *begin++;
     for (const auto end = begin + sol.size() - 1; begin != end; ++begin) {
-      std::cout << ", " << *begin - 1;
+      std::cout << ", " << *begin;
     }
     std::cout << "]\n";
 
