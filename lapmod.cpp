@@ -448,7 +448,7 @@ private:
 
   int size() const { return cost_matrix_->height(); }
 
-  const matrix *cost_matrix_;
+  const matrix *const cost_matrix_;
   mutable std::vector<std::vector<int>> cc_;
   mutable std::vector<std::vector<int>> kk_;
   int *const data_;
