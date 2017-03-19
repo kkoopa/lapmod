@@ -151,7 +151,7 @@ public:
       *x = nullptr;
     }
 
-    const int *s_;
+    int *s_;
     int l_;
     long c_;
   };
@@ -354,11 +354,12 @@ private:
           auto t = 0u;
           for (; kk_[i][t] != j0 + 1; ++t)
             ;
-          auto h = cc_[i][t] - v_[j0] - min;
+
+          const auto hh = cc_[i][t] - v_[j0] - min;
           for (t = 0; t != kk_[i].size(); ++t) {
             j = kk_[i][t] - 1;
             if (!ok[j]) {
-              const auto vj = cc_[i][t] - v_[j] - h;
+              const auto vj = cc_[i][t] - v_[j] - hh;
               if (vj < d_[j]) {
                 d_[j] = vj;
                 lab_[j] = i;
@@ -385,7 +386,7 @@ private:
                 todo_[++td1] = j;
               }
             }
-            for (h = 0; h != td1 + 1; ++h) {
+            for (auto h = 0; h != td1 + 1; ++h) {
               j = todo_[h];
               if (y_[j] == 0) {
                 goto price_update;
@@ -450,7 +451,7 @@ private:
   const matrix *cost_matrix_;
   mutable std::vector<std::vector<int>> cc_;
   mutable std::vector<std::vector<int>> kk_;
-  int *data_;
+  int *const data_;
   int *const d_;
   int *const unused_;
   int *const lab_;
@@ -480,24 +481,25 @@ matrix read_data(std::string path) {
 }
 
 int main() {
-  long answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
+  static const long answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
   for (auto i = 0; i < static_cast<int>(sizeof(answer) / sizeof(answer[0]));
        ++i) {
-    auto m = read_data(std::string("problems/assign") +
-                       std::to_string(100 * (i + 1)) + std::string(".txt"));
-    problem p(&m);
+    const auto m =
+        read_data(std::string("problems/assign") +
+                  std::to_string(100 * (i + 1)) + std::string(".txt"));
+    const problem p(&m);
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start =
         std::chrono::high_resolution_clock::now();
 
-    auto sol = p.solve();
+    const auto sol = p.solve();
 
     std::chrono::duration<double> elapsed_seconds =
         std::chrono::high_resolution_clock::now() - start;
 
     auto begin = sol.data();
     std::cout << '[' << *begin++ - 1;
-    for (auto end = begin + sol.size() - 1; begin != end; ++begin) {
+    for (const auto end = begin + sol.size() - 1; begin != end; ++begin) {
       std::cout << ", " << *begin - 1;
     }
     std::cout << "]\n";
