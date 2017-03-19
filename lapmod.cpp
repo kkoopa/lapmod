@@ -123,9 +123,7 @@ public:
         v_{data_ + 5 * cost_matrix_->width()},
         y_{data_ + 6 * cost_matrix_->width()}, x_{} {
     const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
-    for (auto &v : kk_) {
-      v.reserve(n);
-    }
+    std::for_each(kk_.begin(), kk_.end(), [n](auto &v) { v.reserve(n); });
   }
   ~problem() {
     delete[] data_;
@@ -503,11 +501,10 @@ int main() {
     const auto m =
         read_data(std::string("problems/assign") +
                   std::to_string(100 * (i + 1)) + std::string(".txt"));
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     const lapmod::problem p(&m);
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start =
-        std::chrono::high_resolution_clock::now();
-
     const auto sol = p.solve();
 
     std::chrono::duration<double> elapsed_seconds =
