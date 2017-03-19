@@ -42,6 +42,7 @@
 #include <string>
 #include <vector>
 
+namespace lapmod {
 class matrix {
 public:
   matrix() : height_{}, width_{}, data_{nullptr} {}
@@ -461,12 +462,13 @@ private:
   int *const y_;
   mutable int *x_;
 };
+} // namespace lapmod
 
-matrix read_data(std::string path) {
+lapmod::matrix read_data(std::string path) {
   std::ifstream ifs(path);
   int n;
   if (ifs >> n) {
-    matrix cc(n);
+    lapmod::matrix cc(n);
     for (int c, i = 0, j = 0; ifs >> c; ++j) {
       cc[i][j] = c;
       if (j == n - 1) {
@@ -487,7 +489,7 @@ int main() {
     const auto m =
         read_data(std::string("problems/assign") +
                   std::to_string(100 * (i + 1)) + std::string(".txt"));
-    const problem p(&m);
+    const lapmod::problem p(&m);
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start =
         std::chrono::high_resolution_clock::now();
