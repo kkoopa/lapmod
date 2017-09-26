@@ -37,6 +37,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -45,33 +46,31 @@
 namespace lapmod {
 class matrix {
 public:
-  matrix() noexcept : height_{}, width_{}, data_{nullptr} {}
+  matrix() noexcept : height_{}, width_{}, data_{} {}
   matrix(const matrix &) = delete;
   matrix(matrix &&other) noexcept : height_{other.height_},
                                     width_{other.width_},
-                                    data_{other.data_} {
-    other.data_ = nullptr;
-  }
+                                    data_{std::move(other.data_)} {}
   explicit matrix(int n) : matrix(n, n) {}
   matrix(int height, int width)
-      : height_{height}, width_{width}, data_{new int[height_ * width_]} {}
+      : height_{height}, width_{width},
+        data_{std::make_unique<int[]>(height_ * width_)} {}
   explicit matrix(std::initializer_list<std::initializer_list<int>> l)
       : height_{static_cast<int>(l.size())},
         width_{static_cast<int>(l.begin()->size())},
-        data_{new int[height_ * width_]} {
+        data_{std::make_unique<int[]>(height_ * width_)} {
     if (l.size() > std::numeric_limits<int>::max() ||
         l.begin()->size() > std::numeric_limits<int>::max()) {
       throw std::range_error("Matrix dimensions too large.");
     }
-    std::accumulate(l.begin(), l.end(), data_, [](auto *lhs, const auto &rhs) {
-      return std::copy(rhs.begin(), rhs.end(), lhs);
-    });
+    std::accumulate(l.begin(), l.end(), data_.get(),
+                    [](auto *lhs, const auto &rhs) {
+                      return std::copy(rhs.begin(), rhs.end(), lhs);
+                    });
   }
 
   matrix &operator=(const matrix &) = delete;
   matrix &operator=(matrix &&other) = delete;
-
-  ~matrix() { delete[] data_; }
 
   int height() const noexcept { return height_; }
   int width() const noexcept { return width_; }
@@ -97,7 +96,7 @@ private:
   }
   const int height_;
   const int width_;
-  int *data_;
+  std::unique_ptr<int[]> data_;
 };
 
 const int inf = std::numeric_limits<int>::max();
@@ -108,19 +107,15 @@ public:
   problem(const problem &) = delete;
   explicit problem(const matrix *cost_matrix)
       : cost_matrix_(cost_matrix), kk_(cost_matrix_->height()),
-        data_{new int[7 * cost_matrix_->width()]}, d_{data_},
-        unused_{data_ + cost_matrix_->width()},
-        lab_{data_ + 2 * cost_matrix_->width()},
-        todo_{data_ + 3 * cost_matrix_->width()},
-        u_{data_ + 4 * cost_matrix_->width()},
-        v_{data_ + 5 * cost_matrix_->width()},
-        y_{data_ + 6 * cost_matrix_->width()}, x_{} {
+        data_{std::make_unique<int[]>(7 * cost_matrix_->width())}, d_{data_.get()},
+        unused_{data_.get() + cost_matrix_->width()},
+        lab_{data_.get() + 2 * cost_matrix_->width()},
+        todo_{data_.get() + 3 * cost_matrix_->width()},
+        u_{data_.get() + 4 * cost_matrix_->width()},
+        v_{data_.get() + 5 * cost_matrix_->width()},
+        y_{data_.get() + 6 * cost_matrix_->width()}, x_{} {
     const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
     std::for_each(kk_.begin(), kk_.end(), [n](auto &v) { v.reserve(n); });
-  }
-  ~problem() {
-    delete[] data_;
-    delete[] x_;
   }
 
   problem &operator=(const problem &) = delete;
@@ -129,36 +124,24 @@ public:
   public:
     solution() = delete;
     solution(const solution &) = delete;
-    solution(solution &&other) noexcept : s_{other.s_},
-                                          l_{other.l_},
-                                          c_{other.c_} {
-      other.s_ = nullptr;
-    }
-    ~solution() { delete[] s_; }
+    solution(solution &&other) = default;
 
     solution &operator=(const solution &) = delete;
-    solution &operator=(solution &&other) noexcept {
-      s_ = other.s_;
-      l_ = other.l_;
-      c_ = other.c_;
-      other.s_ = nullptr;
+    solution &operator=(solution &&other)  = default;
 
-      return *this;
-    }
-
-    const int *data() const noexcept { return s_; }
+    const int *data() const noexcept { return s_.get(); }
     int size() const noexcept { return l_; }
     long value() const noexcept { return c_; }
 
   private:
     friend class problem;
-    solution(int **x, const matrix *c, const int *v, const int *u) noexcept
-        : s_{*x},
+    solution(std::unique_ptr<int[]> &&x, const matrix *c, const int *v,
+             const int *u) noexcept
+        : s_{std::move(x)},
           l_{c->height()},
           c_{std::accumulate(v, v + c->width(),
                              std::accumulate(u, u + c->height(), 0l))} {
-      std::for_each(s_, s_ + c->height(), [](auto &n) { --n; });
-      *x = nullptr;
+      std::for_each(s_.get(), s_.get() + c->height(), [](auto &n) { --n; });
     }
 
     friend std::ostream &operator<<(std::ostream &os,
@@ -172,7 +155,7 @@ public:
       return os;
     }
 
-    int *s_;
+    std::unique_ptr<int[]> s_;
     int l_;
     long c_;
   };
@@ -180,7 +163,7 @@ public:
   solution solve() const {
     selpp_cr();
     augmentation(arr(transfer()));
-    return solution(&x_, cost_matrix_, v_, u_);
+    return solution(std::move(x_), cost_matrix_, v_, u_);
   }
 
 private:
@@ -190,7 +173,7 @@ private:
                          : cost_matrix_->width() >> 5;
 
     std::fill_n(v_, cost_matrix_->width(), inf);
-    x_ = new int[cost_matrix_->height()];
+    x_ = std::make_unique<int[]>(cost_matrix_->height());
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       auto s = 0l;
@@ -457,7 +440,7 @@ private:
 
   const matrix *const cost_matrix_;
   mutable std::vector<std::vector<int>> kk_;
-  int *const data_;
+  const std::unique_ptr<int[]> data_;
   int *const d_;
   int *const unused_;
   int *const lab_;
@@ -465,7 +448,7 @@ private:
   int *const u_;
   int *const v_;
   int *const y_;
-  mutable int *x_;
+  mutable std::unique_ptr<int[]> x_;
 };
 } // namespace lapmod
 
