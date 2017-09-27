@@ -48,16 +48,16 @@ class matrix {
 public:
   matrix() noexcept : height_{}, width_{}, data_{} {}
   matrix(const matrix &) = delete;
-  matrix(matrix &&other) noexcept : height_{other.height_},
-                                    width_{other.width_},
-                                    data_{std::move(other.data_)} {}
+  matrix(matrix &&other) noexcept
+      : height_{other.height_}, width_{other.width_}, data_{std::move(
+                                                          other.data_)} {}
   explicit matrix(int n) : matrix(n, n) {}
   matrix(int height, int width)
-      : height_{height}, width_{width},
-        data_{std::make_unique<int[]>(height_ * width_)} {}
+      : height_{height}, width_{width}, data_{std::make_unique<int[]>(
+                                            height_ * width_)} {}
   explicit matrix(std::initializer_list<std::initializer_list<int>> l)
-      : height_{static_cast<int>(l.size())},
-        width_{static_cast<int>(l.begin()->size())},
+      : height_{static_cast<int>(l.size())}, width_{static_cast<int>(
+                                                 l.begin()->size())},
         data_{std::make_unique<int[]>(height_ * width_)} {
     if (l.size() > std::numeric_limits<int>::max() ||
         l.begin()->size() > std::numeric_limits<int>::max()) {
@@ -106,9 +106,10 @@ public:
   problem() = delete;
   problem(const problem &) = delete;
   explicit problem(const matrix *cost_matrix)
-      : cost_matrix_(cost_matrix), kk_(cost_matrix_->height()),
-        data_{std::make_unique<int[]>(7 * cost_matrix_->width())}, d_{data_.get()},
-        unused_{data_.get() + cost_matrix_->width()},
+      : cost_matrix_(cost_matrix),
+        kk_(cost_matrix_->height()), data_{std::make_unique<int[]>(
+                                         7 * cost_matrix_->width())},
+        d_{data_.get()}, unused_{data_.get() + cost_matrix_->width()},
         lab_{data_.get() + 2 * cost_matrix_->width()},
         todo_{data_.get() + 3 * cost_matrix_->width()},
         u_{data_.get() + 4 * cost_matrix_->width()},
@@ -127,7 +128,7 @@ public:
     solution(solution &&other) = default;
 
     solution &operator=(const solution &) = delete;
-    solution &operator=(solution &&other)  = default;
+    solution &operator=(solution &&other) = default;
 
     const int *data() const noexcept { return s_.get(); }
     int size() const noexcept { return l_; }
@@ -137,8 +138,7 @@ public:
     friend class problem;
     solution(std::unique_ptr<int[]> &&x, const matrix *c, const int *v,
              const int *u) noexcept
-        : s_{std::move(x)},
-          l_{c->height()},
+        : s_{std::move(x)}, l_{c->height()},
           c_{std::accumulate(v, v + c->width(),
                              std::accumulate(u, u + c->height(), 0l))} {
       std::for_each(s_.get(), s_.get() + c->height(), [](auto &n) { --n; });
@@ -451,48 +451,4 @@ private:
   mutable std::unique_ptr<int[]> x_;
 };
 } // namespace lapmod
-
-lapmod::matrix read_data(const std::string &path) {
-  std::ifstream ifs(path);
-  auto n = 0;
-  if (ifs >> n) {
-    lapmod::matrix cc(n);
-    for (auto c = 0, i = 0, j = 0; ifs >> c; ++j) {
-      cc[i][j] = c;
-      if (j == n - 1) {
-        j = -1;
-        ++i;
-      }
-    }
-    return cc;
-  } else {
-    throw std::logic_error("Bad data file.");
-  }
-}
-
-int main() {
-  static const long answer[] = {305, 475, 626, 804, 991, 1176, 1362, 1552};
-  for (auto i = 0; i < static_cast<int>(sizeof(answer) / sizeof(answer[0]));
-       ++i) {
-    const auto m =
-        read_data(std::string("problems/assign") +
-                  std::to_string(100 * (i + 1)) + std::string(".txt"));
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    const lapmod::problem p(&m);
-    const auto sol = p.solve();
-
-    std::chrono::duration<double> elapsed_seconds =
-        std::chrono::high_resolution_clock::now() - start;
-
-    std::cout << "Solution: " << sol << "\nCost: " << sol.value()
-              << "\nDuration: " << elapsed_seconds.count() << " s\n";
-
-    if (sol.value() != answer[i]) {
-      throw std::logic_error("The solver is broken.");
-    }
-  }
-  return 0;
-}
 
