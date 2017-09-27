@@ -1,7 +1,7 @@
 BUILD_DIR := build
 INCLUDE_DIR := include
 SRC_DIR := src
-OPTFLAGS := -Ofast -flto -g3 -ggdb -fno-omit-frame-pointer
+OPTFLAGS := -Ofast -flto
 COMPILER_FLAGS := -std=c++14 -march=native $(OPTFLAGS) -fno-rtti -Wall -Wextra -Werror -pedantic -Wshadow -Wmissing-include-dirs -Winvalid-pch -Wformat=2
 CXXFLAGS := $(COMPILER_FLAGS) -DNDEBUG -I$(INCLUDE_DIR)
 SRC := $(wildcard $(SRC_DIR)/*.cpp)
