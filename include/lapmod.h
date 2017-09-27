@@ -99,8 +99,6 @@ private:
   std::unique_ptr<int[]> data_;
 };
 
-const int inf = std::numeric_limits<int>::max();
-
 class problem {
 public:
   problem() = delete;
@@ -108,13 +106,7 @@ public:
   explicit problem(const matrix *cost_matrix)
       : cost_matrix_(cost_matrix),
         kk_(cost_matrix_->height()), data_{std::make_unique<int[]>(
-                                         7 * cost_matrix_->width())},
-        d_{data_.get()}, unused_{data_.get() + cost_matrix_->width()},
-        lab_{data_.get() + 2 * cost_matrix_->width()},
-        todo_{data_.get() + 3 * cost_matrix_->width()},
-        u_{data_.get() + 4 * cost_matrix_->width()},
-        v_{data_.get() + 5 * cost_matrix_->width()},
-        y_{data_.get() + 6 * cost_matrix_->width()}, x_{} {
+                                         7 * cost_matrix_->width())} {
     const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
     std::for_each(kk_.begin(), kk_.end(), [n](auto &v) { v.reserve(n); });
   }
@@ -161,18 +153,22 @@ public:
   };
 
   solution solve() const {
+    const auto u = data_.get() + 4 * cost_matrix_->width();
+    const auto v = data_.get() + 5 * cost_matrix_->width();
     selpp_cr();
     augmentation(arr(transfer()));
-    return solution(std::move(x_), cost_matrix_, v_, u_);
+    return solution(std::move(x_), cost_matrix_, v, u);
   }
 
 private:
   void selpp_cr() const {
+    const auto v = data_.get() + 5 * cost_matrix_->width();
+    const auto y = data_.get() + 6 * cost_matrix_->width();
     const auto end = cost_matrix_->width() >> 5 < 2
                          ? cost_matrix_->width()
                          : cost_matrix_->width() >> 5;
 
-    std::fill_n(v_, cost_matrix_->width(), inf);
+    std::fill_n(v, cost_matrix_->width(), inf);
     x_ = std::make_unique<int[]>(cost_matrix_->height());
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
@@ -202,9 +198,9 @@ private:
 
       for (auto t = 0; t != end; ++t) {
         const auto j = kk_[i][t];
-        if ((*cost_matrix_)[i][j] < v_[j]) {
-          v_[j] = (*cost_matrix_)[i][j];
-          y_[j] = i + 1;
+        if ((*cost_matrix_)[i][j] < v[j]) {
+          v[j] = (*cost_matrix_)[i][j];
+          y[j] = i + 1;
         }
         if (j == i) {
           diag = inf;
@@ -213,42 +209,44 @@ private:
 
       if (diag < inf) {
         kk_[i].push_back(i);
-        if (diag < v_[i]) {
-          v_[i] = diag;
-          y_[i] = i + 1;
+        if (diag < v[i]) {
+          v[i] = diag;
+          y[i] = i + 1;
         }
       }
     }
 
     for (auto j = cost_matrix_->width(); j > 0; --j) {
-      const auto i = y_[j - 1] - 1;
+      const auto i = y[j - 1] - 1;
       if (x_[i] == 0) {
         x_[i] = j;
       } else {
         x_[i] = -std::abs(x_[i]);
-        y_[j - 1] = 0;
+        y[j - 1] = 0;
       }
     }
   }
 
   int transfer() const noexcept {
+    const auto unused = data_.get() + cost_matrix_->width();
+    const auto v = data_.get() + 5 * cost_matrix_->width();
     auto l = -1;
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       if (x_[i] < 0) {
         x_[i] = -x_[i];
       } else if (x_[i] == 0) {
-        unused_[++l] = i;
+        unused[++l] = i;
       } else {
         auto min = inf;
         const auto j1 = x_[i] - 1;
         for (auto t = 0u; t != kk_[i].size(); ++t) {
           const auto j = kk_[i][t];
-          if (j != j1 && (*cost_matrix_)[i][j] - v_[j] < min) {
-            min = (*cost_matrix_)[i][j] - v_[j];
+          if (j != j1 && (*cost_matrix_)[i][j] - v[j] < min) {
+            min = (*cost_matrix_)[i][j] - v[j];
           }
         }
-        v_[j1] = (*cost_matrix_)[i][j1] - min;
+        v[j1] = (*cost_matrix_)[i][j1] - min;
       }
     }
 
@@ -256,18 +254,22 @@ private:
   }
 
   int arr(int l) const noexcept {
+    const auto unused = data_.get() + cost_matrix_->width();
+    const auto v = data_.get() + 5 * cost_matrix_->width();
+    const auto y = data_.get() + 6 * cost_matrix_->width();
+
     for (auto cnt = 0; cnt != 2; ++cnt) {
       auto h = 0;
       const auto l0 = l;
       l = -1;
 
       while (h <= l0) {
-        const auto i = unused_[h++];
+        const auto i = unused[h++];
         auto v0 = inf, vj = inf;
         auto j0 = -1, j1 = -1;
 
         for (auto t = 0u; t != kk_[i].size(); ++t) {
-          const auto j = kk_[i][t], dj = (*cost_matrix_)[i][j] - v_[j];
+          const auto j = kk_[i][t], dj = (*cost_matrix_)[i][j] - v[j];
 
           if (dj < vj) {
             if (dj >= v0) {
@@ -282,23 +284,23 @@ private:
           }
         }
 
-        auto i0 = y_[j0];
+        auto i0 = y[j0];
 
         if (v0 < vj) {
-          v_[j0] = v_[j0] - vj + v0;
+          v[j0] = v[j0] - vj + v0;
         } else if (i0 > 0) {
           j0 = j1;
-          i0 = y_[j0];
+          i0 = y[j0];
         }
 
         x_[i] = j0 + 1;
-        y_[j0] = i + 1;
+        y[j0] = i + 1;
 
         if (i0 > 0) {
           if (v0 < vj) {
-            unused_[--h] = i0 - 1;
+            unused[--h] = i0 - 1;
           } else {
-            unused_[++l] = i0 - 1;
+            unused[++l] = i0 - 1;
           }
         }
       }
@@ -307,29 +309,38 @@ private:
   }
 
   void augmentation(int l) const {
+    const auto d = data_.get();
+    const auto unused = data_.get() + cost_matrix_->width();
+    const auto lab = data_.get() + 2 * cost_matrix_->width();
+    const auto todo = data_.get() + 3 * cost_matrix_->width();
+    const auto u = data_.get() + 4 * cost_matrix_->width();
+    const auto v = data_.get() + 5 * cost_matrix_->width();
+    const auto y = data_.get() + 6 * cost_matrix_->width();
+
     std::vector<bool> ok(cost_matrix_->height());
+
     do {
       const auto l0 = l;
       for (l = 0; l <= l0; ++l) {
         auto j = -1;
-        std::fill_n(d_, cost_matrix_->height(), inf);
+        std::fill_n(d, cost_matrix_->height(), inf);
         std::fill(ok.begin(), ok.end(), false);
         auto min = inf;
-        const auto i0 = unused_[l];
+        const auto i0 = unused[l];
         auto td1 = -1;
 
         for (auto t = 0u; t != kk_[i0].size(); ++t) {
           j = kk_[i0][t];
-          const auto dj = (*cost_matrix_)[i0][j] - v_[j];
-          d_[j] = dj;
-          lab_[j] = i0;
+          const auto dj = (*cost_matrix_)[i0][j] - v[j];
+          d[j] = dj;
+          lab[j] = i0;
 
           if (dj <= min) {
             if (dj < min) {
               td1 = -1;
               min = dj;
             }
-            todo_[++td1] = j;
+            todo[++td1] = j;
           }
         }
 
@@ -337,31 +348,31 @@ private:
         auto td2 = last - 1;
 
         for (auto h = 0; h != td1 + 1; ++h) {
-          j = todo_[h];
-          if (y_[j] == 0) {
+          j = todo[h];
+          if (y[j] == 0) {
             goto augment;
           }
           ok[j] = true;
         }
 
         do {
-          const auto j0 = todo_[td1--];
-          const auto i = y_[j0] - 1;
-          todo_[td2--] = j0;
+          const auto j0 = todo[td1--];
+          const auto i = y[j0] - 1;
+          todo[td2--] = j0;
 
-          const auto hh = (*cost_matrix_)[i][j0] - v_[j0] - min;
+          const auto hh = (*cost_matrix_)[i][j0] - v[j0] - min;
           for (auto t = 0; t != static_cast<int>(kk_[i].size()); ++t) {
             j = kk_[i][t];
             if (!ok[j]) {
-              const auto vj = (*cost_matrix_)[i][j] - v_[j] - hh;
-              if (vj < d_[j]) {
-                d_[j] = vj;
-                lab_[j] = i;
+              const auto vj = (*cost_matrix_)[i][j] - v[j] - hh;
+              if (vj < d[j]) {
+                d[j] = vj;
+                lab[j] = i;
                 if (vj == min) {
-                  if (y_[j] == 0) {
+                  if (y[j] == 0) {
                     goto price_update;
                   }
-                  todo_[++td1] = j;
+                  todo[++td1] = j;
                   ok[j] = true;
                 }
               }
@@ -372,17 +383,17 @@ private:
             min = inf - 1;
             last = td2 + 1;
             for (j = 0; j != cost_matrix_->width(); ++j) {
-              if (d_[j] <= min && !ok[j]) {
-                if (d_[j] < min) {
+              if (d[j] <= min && !ok[j]) {
+                if (d[j] < min) {
                   td1 = -1;
-                  min = d_[j];
+                  min = d[j];
                 }
-                todo_[++td1] = j;
+                todo[++td1] = j;
               }
             }
             for (auto h = 0; h != td1 + 1; ++h) {
-              j = todo_[h];
-              if (y_[j] == 0) {
+              j = todo[h];
+              if (y[j] == 0) {
                 goto price_update;
               }
               ok[j] = true;
@@ -391,14 +402,14 @@ private:
         } while (true);
       price_update:
         for (auto k = last; k < cost_matrix_->width(); ++k) {
-          const auto j0 = todo_[k];
-          v_[j0] = v_[j0] + d_[j0] - min;
+          const auto j0 = todo[k];
+          v[j0] = v[j0] + d[j0] - min;
         }
       augment:
         auto i = -1;
         do {
-          i = lab_[j];
-          y_[j] = i + 1;
+          i = lab[j];
+          y[j] = i + 1;
           const auto k = j + 1;
           j = x_[i] - 1;
           x_[i] = k;
@@ -407,7 +418,7 @@ private:
 
       for (auto i = 0; i != cost_matrix_->height(); ++i) {
         const auto j = x_[i] - 1;
-        u_[i] = (*cost_matrix_)[i][j] - v_[j];
+        u[i] = (*cost_matrix_)[i][j] - v[j];
       }
 
       l = optcheck();
@@ -415,21 +426,27 @@ private:
   }
 
   int optcheck() const noexcept {
+    const auto unused = data_.get() + cost_matrix_->width();
+    const auto u = data_.get() + 4 * cost_matrix_->width();
+    const auto v = data_.get() + 5 * cost_matrix_->width();
+    const auto y = data_.get() + 6 * cost_matrix_->width();
+
     auto l = -1;
+
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       auto newfree = false;
 
       for (auto j = 0; j != cost_matrix_->width(); ++j) {
-        if ((*cost_matrix_)[i][j] < u_[i] + v_[j]) {
+        if ((*cost_matrix_)[i][j] < u[i] + v[j]) {
           kk_[i].push_back(j);
           newfree = true;
         }
       }
 
       if (newfree) {
-        y_[x_[i] - 1] = 0;
+        y[x_[i] - 1] = 0;
         x_[i] = 0;
-        unused_[++l] = i;
+        unused[++l] = i;
       }
     }
 
@@ -441,14 +458,8 @@ private:
   const matrix *const cost_matrix_;
   mutable std::vector<std::vector<int>> kk_;
   const std::unique_ptr<int[]> data_;
-  int *const d_;
-  int *const unused_;
-  int *const lab_;
-  int *const todo_;
-  int *const u_;
-  int *const v_;
-  int *const y_;
   mutable std::unique_ptr<int[]> x_;
+  static const int inf = std::numeric_limits<int>::max();
 };
 } // namespace lapmod
 
