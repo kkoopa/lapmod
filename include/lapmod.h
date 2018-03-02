@@ -359,7 +359,7 @@ private:
           ok[j] = true;
         }
 
-        do {
+        for (;;) {
           const auto j0 = todo[td1--];
           const auto i = y[j0] - 1;
           todo[td2--] = j0;
@@ -403,7 +403,7 @@ private:
               ok[j] = true;
             }
           }
-        } while (true);
+        }
       price_update:
         for (auto k = last; k < cost_matrix_->width(); ++k) {
           const auto j0 = todo[k];
