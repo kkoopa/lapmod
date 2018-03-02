@@ -178,7 +178,9 @@ private:
         s += (*cost_matrix_)[i][j];
       }
 
-      auto cr = s / end;
+      auto cr = static_cast<decltype(s)>(
+          static_cast<std::make_unsigned_t<decltype(s)>>(s) /
+          static_cast<std::make_unsigned_t<decltype(end)>>(end));
 
       for (auto j = end; j != cost_matrix_->width(); ++j) {
         if ((*cost_matrix_)[i][j] < cr) {
@@ -189,7 +191,9 @@ private:
           } while (h < cr);
           kk_[i][t] = j;
           s = s - h + (*cost_matrix_)[i][j];
-          cr = s / end;
+          cr = static_cast<decltype(s)>(
+              static_cast<std::make_unsigned_t<decltype(s)>>(s) /
+              static_cast<std::make_unsigned_t<decltype(end)>>(end));
         }
       }
 
