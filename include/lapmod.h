@@ -114,6 +114,8 @@ class problem {
 
     problem &operator=(const problem &) = delete;
 
+    int size() const noexcept { return cost_matrix_->height(); }
+
     class solution {
      public:
         solution() = delete;
@@ -461,8 +463,6 @@ class problem {
 
         return l;
     }
-
-    int size() const noexcept { return cost_matrix_->height(); }
 
     const matrix *const cost_matrix_;
     mutable std::vector<std::vector<int>> kk_;
