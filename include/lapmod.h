@@ -128,13 +128,15 @@ public:
 
   private:
     friend class problem;
+    template <typename T> auto move_helper(T &&x, const matrix *m) noexcept {
+        std::for_each(x.get(), x.get() + m->height(), [](auto &n) { --n; });
+        return std::forward<T>(x);
+    }
     solution(std::unique_ptr<int[]> &&x, const matrix *c, const int *v,
              const int *u) noexcept
-        : s_{std::move(x)}, l_{c->height()},
+        : s_{move_helper(std::move(x), c)}, l_{c->height()},
           c_{std::accumulate(v, v + c->width(),
-                             std::accumulate(u, u + c->height(), 0l))} {
-      std::for_each(s_.get(), s_.get() + c->height(), [](auto &n) { --n; });
-    }
+                             std::accumulate(u, u + c->height(), 0l))} {}
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const solution &s) noexcept {
@@ -147,9 +149,9 @@ public:
       return os;
     }
 
-    std::unique_ptr<int[]> s_;
-    int l_;
-    long c_;
+    std::unique_ptr<const int[]> s_;
+    const int l_;
+    const long c_;
   };
 
   solution solve() const {
