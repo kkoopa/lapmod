@@ -111,7 +111,7 @@ class problem {
     static const int k_ok_idx = 7;
     static const int k_field_count = 8;
 
-    const auto get_field(int idx) const {
+    auto get_field(int idx) const noexcept {
         return data_.get() + idx * cost_matrix_->width();
     }
 
