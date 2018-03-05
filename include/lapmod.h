@@ -157,13 +157,12 @@ public:
   solution solve() const {
     const auto u = data_.get() + 4 * cost_matrix_->width();
     const auto v = data_.get() + 5 * cost_matrix_->width();
-    selpp_cr();
-    augmentation(arr(transfer()));
+    augmentation(arr(transfer(selpp_cr())));
     return solution(std::move(x_), cost_matrix_, v, u);
   }
 
 private:
-  void selpp_cr() const {
+  int selpp_cr() const {
     const auto v = data_.get() + 5 * cost_matrix_->width();
     const auto y = data_.get() + 6 * cost_matrix_->width();
     const auto end = cost_matrix_->width() >> 5 < 2
@@ -231,12 +230,13 @@ private:
         y[j - 1] = 0;
       }
     }
+
+    return -1;
   }
 
-  int transfer() const noexcept {
+  int transfer(int l) const noexcept {
     const auto unused = data_.get() + cost_matrix_->width();
     const auto v = data_.get() + 5 * cost_matrix_->width();
-    auto l = -1;
 
     for (auto i = 0; i != cost_matrix_->height(); ++i) {
       if (x_[i] < 0) {
