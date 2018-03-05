@@ -101,13 +101,28 @@ class matrix {
 };
 
 class problem {
+    static const int k_d_idx = 0;
+    static const int k_unused_idx = 1;
+    static const int k_lab_idx = 2;
+    static const int k_todo_idx = 3;
+    static const int k_u_idx = 4;
+    static const int k_v_idx = 5;
+    static const int k_y_idx = 6;
+    static const int k_ok_idx = 7;
+    static const int k_field_count = 8;
+
+    const auto get_field(int idx) const {
+        return data_.get() + idx * cost_matrix_->width();
+    }
+
  public:
     problem() = delete;
     problem(const problem &) = delete;
     explicit problem(const matrix *cost_matrix)
         : cost_matrix_(cost_matrix),
           kk_(cost_matrix_->height()), data_{std::make_unique<int[]>(
-                                           7 * cost_matrix_->width())} {
+                                           k_field_count *
+                                           cost_matrix_->width())} {
         const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
         std::for_each(kk_.begin(), kk_.end(), [n](auto &v) { v.reserve(n); });
     }
@@ -159,16 +174,16 @@ class problem {
     };
 
     solution solve() const {
-        const auto u = data_.get() + 4 * cost_matrix_->width();
-        const auto v = data_.get() + 5 * cost_matrix_->width();
+        const auto u = get_field(k_u_idx);
+        const auto v = get_field(k_v_idx);
         augmentation(arr(transfer(selpp_cr())));
         return solution(std::move(x_), cost_matrix_, v, u);
     }
 
  private:
     int selpp_cr() const {
-        const auto v = data_.get() + 5 * cost_matrix_->width();
-        const auto y = data_.get() + 6 * cost_matrix_->width();
+        const auto v = get_field(k_v_idx);
+        const auto y = get_field(k_y_idx);
         const auto end = cost_matrix_->width() >> 5 < 2
                              ? cost_matrix_->width()
                              : cost_matrix_->width() >> 5;
@@ -239,8 +254,8 @@ class problem {
     }
 
     int transfer(int l) const noexcept {
-        const auto unused = data_.get() + cost_matrix_->width();
-        const auto v = data_.get() + 5 * cost_matrix_->width();
+        const auto unused = get_field(k_unused_idx);
+        const auto v = get_field(k_v_idx);
 
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
             if (x_[i] < 0) {
@@ -264,9 +279,9 @@ class problem {
     }
 
     int arr(int l) const noexcept {
-        const auto unused = data_.get() + cost_matrix_->width();
-        const auto v = data_.get() + 5 * cost_matrix_->width();
-        const auto y = data_.get() + 6 * cost_matrix_->width();
+        const auto unused = get_field(k_unused_idx);
+        const auto v = get_field(k_v_idx);
+        const auto y = get_field(k_y_idx);
 
         for (auto cnt = 0; cnt != 2; ++cnt) {
             auto h = 0;
@@ -319,22 +334,21 @@ class problem {
     }
 
     void augmentation(int l) const {
-        const auto d = data_.get();
-        const auto unused = data_.get() + cost_matrix_->width();
-        const auto lab = data_.get() + 2 * cost_matrix_->width();
-        const auto todo = data_.get() + 3 * cost_matrix_->width();
-        const auto u = data_.get() + 4 * cost_matrix_->width();
-        const auto v = data_.get() + 5 * cost_matrix_->width();
-        const auto y = data_.get() + 6 * cost_matrix_->width();
-
-        std::vector<bool> ok(cost_matrix_->height());
+        const auto d = get_field(k_d_idx);
+        const auto unused = get_field(k_unused_idx);
+        const auto lab = get_field(k_lab_idx);
+        const auto todo = get_field(k_todo_idx);
+        const auto u = get_field(k_u_idx);
+        const auto v = get_field(k_v_idx);
+        const auto y = get_field(k_y_idx);
+        const auto ok = get_field(k_ok_idx);
 
         do {
             const auto l0 = l;
             for (l = 0; l <= l0; ++l) {
                 auto j = -1;
                 std::fill_n(d, cost_matrix_->height(), inf);
-                std::fill(ok.begin(), ok.end(), false);
+                std::fill_n(ok, cost_matrix_->height(), false);
                 auto min = inf;
                 const auto i0 = unused[l];
                 auto td1 = -1;
@@ -437,10 +451,10 @@ class problem {
     }
 
     int optcheck() const noexcept {
-        const auto unused = data_.get() + cost_matrix_->width();
-        const auto u = data_.get() + 4 * cost_matrix_->width();
-        const auto v = data_.get() + 5 * cost_matrix_->width();
-        const auto y = data_.get() + 6 * cost_matrix_->width();
+        const auto unused = get_field(k_unused_idx);
+        const auto u = get_field(k_u_idx);
+        const auto v = get_field(k_v_idx);
+        const auto y = get_field(k_y_idx);
 
         auto l = -1;
 
