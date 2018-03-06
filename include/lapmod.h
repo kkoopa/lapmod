@@ -188,7 +188,7 @@ class problem {
                              ? cost_matrix_->width()
                              : cost_matrix_->width() >> 5;
 
-        std::fill_n(v, cost_matrix_->width(), inf);
+        std::fill_n(v, cost_matrix_->width(), inf());
         x_ = std::make_unique<int[]>(cost_matrix_->height());
 
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
@@ -227,11 +227,11 @@ class problem {
                     y[j] = i + 1;
                 }
                 if (j == i) {
-                    diag = inf;
+                    diag = inf();
                 }
             }
 
-            if (diag < inf) {
+            if (diag < inf()) {
                 kk_[i].push_back(i);
                 if (diag < v[i]) {
                     v[i] = diag;
@@ -263,7 +263,7 @@ class problem {
             } else if (x_[i] == 0) {
                 unused[++l] = i;
             } else {
-                auto min = inf;
+                auto min = inf();
                 const auto j1 = x_[i] - 1;
                 for (auto t = 0u; t != kk_[i].size(); ++t) {
                     const auto j = kk_[i][t];
@@ -290,7 +290,7 @@ class problem {
 
             while (h <= l0) {
                 const auto i = unused[h++];
-                auto v0 = inf, vj = inf;
+                auto v0 = inf(), vj = inf();
                 auto j0 = -1, j1 = -1;
 
                 for (auto t = 0u; t != kk_[i].size(); ++t) {
@@ -347,9 +347,9 @@ class problem {
             const auto l0 = l;
             for (l = 0; l <= l0; ++l) {
                 auto j = -1;
-                std::fill_n(d, cost_matrix_->height(), inf);
+                std::fill_n(d, cost_matrix_->height(), inf());
                 std::fill_n(ok, cost_matrix_->height(), false);
-                auto min = inf;
+                auto min = inf();
                 const auto i0 = unused[l];
                 auto td1 = -1;
 
@@ -405,7 +405,7 @@ class problem {
                     }
 
                     if (td1 == -1) {
-                        min = inf - 1;
+                        min = inf() - 1;
                         last = td2 + 1;
                         for (j = 0; j != cost_matrix_->width(); ++j) {
                             if (d[j] <= min && !ok[j]) {
@@ -482,7 +482,9 @@ class problem {
     mutable std::vector<std::vector<int>> kk_;
     const std::unique_ptr<int[]> data_;
     mutable std::unique_ptr<int[]> x_;
-    static const int inf = std::numeric_limits<int>::max();
+    static constexpr int inf() noexcept {
+        return std::numeric_limits<int>::max();
+    }
 };
 } // namespace lapmod
 
