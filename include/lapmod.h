@@ -173,10 +173,10 @@ class problem {
         const long c_;
     };
 
-    solution solve() const {
+    solution solve(bool approximate = false) const {
         const auto u = get_field(k_u_idx());
         const auto v = get_field(k_v_idx());
-        augmentation(arr(transfer(selpp_cr())));
+        augmentation(arr(transfer(selpp_cr())), approximate);
         return solution(std::move(x_), cost_matrix_, v, u);
     }
 
@@ -333,7 +333,7 @@ class problem {
         return l;
     }
 
-    void augmentation(int l) const noexcept {
+    void augmentation(int l, bool approximate) const noexcept {
         const auto d = get_field(k_d_idx());
         const auto unused = get_field(k_unused_idx());
         const auto lab = get_field(k_lab_idx());
@@ -444,6 +444,10 @@ class problem {
             for (auto i = 0; i != cost_matrix_->height(); ++i) {
                 const auto j = x_[i] - 1;
                 u[i] = (*cost_matrix_)[i][j] - v[j];
+            }
+
+            if (approximate) {
+                break;
             }
 
             l = optcheck();
