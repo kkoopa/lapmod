@@ -100,6 +100,11 @@ class matrix {
     std::unique_ptr<int[]> data_;
 };
 
+template<class OutputIterator, class Size, class Assignable>
+void iota_n(OutputIterator first, Size n, Assignable v) {
+    std::generate_n(first, n, [&v]() { return v++; });
+}
+
 class problem {
     static constexpr int k_d_idx() noexcept { return 0; }
     static constexpr int k_unused_idx() noexcept { return 1; }
@@ -124,7 +129,10 @@ class problem {
                                            k_field_count() *
                                            cost_matrix_->width())} {
         const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
-        std::for_each(kk_.begin(), kk_.end(), [n](auto &v) { v.reserve(n); });
+        std::for_each(kk_.begin(), kk_.end(), [n](auto &v) {
+            v.reserve(n);
+            iota_n(std::back_inserter(v), n, 0);
+        });
     }
 
     problem &operator=(const problem &) = delete;
@@ -192,12 +200,8 @@ class problem {
         x_ = std::make_unique<int[]>(cost_matrix_->height());
 
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
-            auto s = 0l;
-            for (auto j = 0; j != end; ++j) {
-                kk_[i].push_back(j);
-                s += (*cost_matrix_)[i][j];
-            }
-
+            auto s = std::accumulate((*cost_matrix_)[i],
+                                     &(*cost_matrix_)[i][end], 0l);
             auto cr = static_cast<decltype(s)>(
                 static_cast<std::make_unsigned_t<decltype(s)>>(s) /
                 static_cast<std::make_unsigned_t<decltype(end)>>(end));
@@ -220,8 +224,7 @@ class problem {
             x_[i] = 0;
             auto diag = (*cost_matrix_)[i][i];
 
-            for (auto t = 0; t != end; ++t) {
-                const auto j = kk_[i][t];
+            for (const auto &j : kk_[i]) {
                 if ((*cost_matrix_)[i][j] < v[j]) {
                     v[j] = (*cost_matrix_)[i][j];
                     y[j] = i + 1;
@@ -265,8 +268,7 @@ class problem {
             } else {
                 auto min = inf();
                 const auto j1 = x_[i] - 1;
-                for (auto t = 0u; t != kk_[i].size(); ++t) {
-                    const auto j = kk_[i][t];
+                for (const auto &j : kk_[i]) {
                     if (j != j1 && (*cost_matrix_)[i][j] - v[j] < min) {
                         min = (*cost_matrix_)[i][j] - v[j];
                     }
@@ -284,17 +286,17 @@ class problem {
         const auto y = get_field(k_y_idx());
 
         for (auto cnt = 0; cnt != 2; ++cnt) {
-            auto h = 0;
-            const auto l0 = l;
+            auto begin = unused;
+            const auto end = &unused[l + 1];
             l = -1;
 
-            while (h <= l0) {
-                const auto i = unused[h++];
+            while (begin != end) {
+                const auto i = *begin++;
                 auto v0 = inf(), vj = inf();
                 auto j0 = -1, j1 = -1;
 
-                for (auto t = 0u; t != kk_[i].size(); ++t) {
-                    const auto j = kk_[i][t], dj = (*cost_matrix_)[i][j] - v[j];
+                for (const auto &j : kk_[i]) {
+                    const auto dj = (*cost_matrix_)[i][j] - v[j];
 
                     if (dj < vj) {
                         if (dj >= v0) {
@@ -323,7 +325,7 @@ class problem {
 
                 if (i0 > 0) {
                     if (v0 < vj) {
-                        unused[--h] = i0 - 1;
+                        *--begin = i0 - 1;
                     } else {
                         unused[++l] = i0 - 1;
                     }
@@ -353,8 +355,8 @@ class problem {
                 const auto i0 = unused[l];
                 auto td1 = -1;
 
-                for (auto t = 0u; t != kk_[i0].size(); ++t) {
-                    j = kk_[i0][t];
+                for (const auto &idx : kk_[i0]) {
+                    j = idx;
                     const auto dj = (*cost_matrix_)[i0][j] - v[j];
                     d[j] = dj;
                     lab[j] = i0;
@@ -371,8 +373,8 @@ class problem {
                 auto last = cost_matrix_->height();
                 auto td2 = last - 1;
 
-                for (auto h = 0; h != td1 + 1; ++h) {
-                    j = todo[h];
+                for (auto it = todo; it != &todo[td1 + 1]; ++it) {
+                    j = *it;
                     if (y[j] == 0) {
                         goto augment;
                     }
@@ -385,9 +387,8 @@ class problem {
                     todo[td2--] = j0;
 
                     const auto hh = (*cost_matrix_)[i][j0] - v[j0] - min;
-                    for (auto t = 0; t != static_cast<int>(kk_[i].size());
-                         ++t) {
-                        j = kk_[i][t];
+                    for (const auto &idx : kk_[i]) {
+                        j = idx;
                         if (!ok[j]) {
                             const auto vj = (*cost_matrix_)[i][j] - v[j] - hh;
                             if (vj < d[j]) {
@@ -416,8 +417,8 @@ class problem {
                                 todo[++td1] = j;
                             }
                         }
-                        for (auto h = 0; h != td1 + 1; ++h) {
-                            j = todo[h];
+                        for (auto it = todo; it != &todo[td1 + 1]; ++it) {
+                            j = *it;
                             if (y[j] == 0) {
                                 goto price_update;
                             }
@@ -426,8 +427,9 @@ class problem {
                     }
                 }
             price_update:
-                for (auto k = last; k < cost_matrix_->width(); ++k) {
-                    const auto j0 = todo[k];
+                for (auto it = &todo[last]; it != &todo[cost_matrix_->width()];
+                     ++it) {
+                    const auto j0 = *it;
                     v[j0] = v[j0] + d[j0] - min;
                 }
             augment:
