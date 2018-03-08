@@ -333,7 +333,6 @@ class problem {
         return l;
     }
 
-    void augmentation(int l) const {
         const auto d = get_field(k_d_idx);
         const auto unused = get_field(k_unused_idx);
         const auto lab = get_field(k_lab_idx);
@@ -342,6 +341,7 @@ class problem {
         const auto v = get_field(k_v_idx);
         const auto y = get_field(k_y_idx);
         const auto ok = get_field(k_ok_idx);
+    void augmentation(int l) const noexcept {
 
         do {
             const auto l0 = l;
