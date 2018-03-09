@@ -100,11 +100,6 @@ class matrix {
     std::unique_ptr<int[]> data_;
 };
 
-template<class OutputIterator, class Size, class Assignable>
-void iota_n(OutputIterator first, Size n, Assignable v) {
-    std::generate_n(first, n, [&v]() { return v++; });
-}
-
 class problem {
     static constexpr int k_d_idx() noexcept { return 0; }
     static constexpr int k_unused_idx() noexcept { return 1; }
@@ -125,15 +120,12 @@ class problem {
     problem(const problem &) = delete;
     explicit problem(const matrix *cost_matrix)
         : cost_matrix_(cost_matrix),
-          kk_(cost_matrix_->height()), data_{std::make_unique<int[]>(
-                                           k_field_count() *
-                                           cost_matrix_->width())} {
-        const auto n = kk_.size() >> 5 < 2 ? kk_.size() : (kk_.size() >> 5) + 1;
-        std::for_each(kk_.begin(), kk_.end(), [n](auto &v) {
-            v.reserve(n);
-            iota_n(std::back_inserter(v), n, 0);
-        });
-    }
+          kk_(cost_matrix_->height(),
+              std::vector<int>(cost_matrix_->height() >> 5 < 2
+                                   ? cost_matrix_->height()
+                                   : (cost_matrix_->height() >> 5) + 1)),
+          data_{std::make_unique<int[]>(k_field_count() *
+                                        cost_matrix_->width())} {}
 
     problem &operator=(const problem &) = delete;
 
@@ -202,6 +194,7 @@ class problem {
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
             auto s = std::accumulate((*cost_matrix_)[i],
                                      &(*cost_matrix_)[i][end], 0l);
+            std::iota(kk_[i].begin(), kk_[i].end(), 0);
             auto cr = static_cast<decltype(s)>(
                 static_cast<std::make_unsigned_t<decltype(s)>>(s) /
                 static_cast<std::make_unsigned_t<decltype(end)>>(end));
