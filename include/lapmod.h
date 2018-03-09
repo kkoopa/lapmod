@@ -176,12 +176,14 @@ class problem {
     solution solve(bool approximate = false) const {
         const auto u = get_field(k_u_idx());
         const auto v = get_field(k_v_idx());
-        augmentation(arr(transfer(selpp_cr())), approximate);
+        selpp_cr();
+        augmentation(arr(transfer<decltype(get_field(k_unused_idx()))>()),
+                     approximate);
         return solution(std::move(x_), cost_matrix_, v, u);
     }
 
  private:
-    int selpp_cr() const {
+    void selpp_cr() const {
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
         const auto end = cost_matrix_->width() >> 5 < 2
@@ -245,19 +247,17 @@ class problem {
                 y[j - 1] = 0;
             }
         }
-
-        return -1;
     }
 
-    int transfer(int l) const noexcept {
-        const auto unused = get_field(k_unused_idx());
+    template <class BidiIt> BidiIt transfer() const noexcept {
+        BidiIt unused = get_field(k_unused_idx());
         const auto v = get_field(k_v_idx());
 
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
             if (x_[i] < 0) {
                 x_[i] = -x_[i];
             } else if (x_[i] == 0) {
-                unused[++l] = i;
+                *unused++ = i;
             } else {
                 auto min = inf();
                 const auto j1 = x_[i] - 1;
@@ -270,21 +270,21 @@ class problem {
             }
         }
 
-        return l;
+        return unused;
     }
 
-    int arr(int l) const noexcept {
-        const auto unused = get_field(k_unused_idx());
+    template <class BidiIt> BidiIt arr(BidiIt uit) const noexcept {
+        const BidiIt unused = get_field(k_unused_idx());
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
 
         for (auto cnt = 0; cnt != 2; ++cnt) {
-            auto begin = unused;
-            const auto end = &unused[l + 1];
-            l = -1;
+            BidiIt unused_begin = unused;
+            const BidiIt unused_end = uit;
+            uit = unused_begin;
 
-            while (begin != end) {
-                const auto i = *begin++;
+            while (unused_begin != unused_end) {
+                const auto i = *unused_begin++;
                 auto v0 = inf(), vj = inf();
                 auto j0 = -1, j1 = -1;
 
@@ -318,19 +318,20 @@ class problem {
 
                 if (i0 > 0) {
                     if (v0 < vj) {
-                        *--begin = i0 - 1;
+                        *--unused_begin = i0 - 1;
                     } else {
-                        unused[++l] = i0 - 1;
+                        *uit++ = i0 - 1;
                     }
                 }
             }
         }
-        return l;
+        return uit;
     }
 
-    void augmentation(int l, bool approximate) const noexcept {
+    template <class BidiIt>
+    void augmentation(BidiIt unused_end, bool approximate) const noexcept {
         const auto d = get_field(k_d_idx());
-        const auto unused = get_field(k_unused_idx());
+        const BidiIt unused = get_field(k_unused_idx());
         const auto lab = get_field(k_lab_idx());
         const auto todo = get_field(k_todo_idx());
         const auto u = get_field(k_u_idx());
@@ -339,13 +340,12 @@ class problem {
         const auto ok = get_field(k_ok_idx());
 
         do {
-            const auto l0 = l;
-            for (l = 0; l <= l0; ++l) {
+            for (auto uit = unused; uit != unused_end; ++uit) {
                 auto j = -1;
                 std::fill_n(d, cost_matrix_->height(), inf());
                 std::fill_n(ok, cost_matrix_->height(), false);
                 auto min = inf();
-                const auto i0 = unused[l];
+                const auto i0 = *uit;
                 auto td1 = -1;
 
                 for (const auto &idx : kk_[i0]) {
@@ -445,17 +445,15 @@ class problem {
                 break;
             }
 
-            l = optcheck();
-        } while (l >= 0);
+            unused_end = optcheck<BidiIt>();
+        } while (unused_end != unused);
     }
 
-    int optcheck() const noexcept {
-        const auto unused = get_field(k_unused_idx());
+    template <class BidiIt> BidiIt optcheck() const noexcept {
+        BidiIt unused = get_field(k_unused_idx());
         const auto u = get_field(k_u_idx());
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
-
-        auto l = -1;
 
         for (auto i = 0; i != cost_matrix_->height(); ++i) {
             auto newfree = false;
@@ -470,11 +468,11 @@ class problem {
             if (newfree) {
                 y[x_[i] - 1] = 0;
                 x_[i] = 0;
-                unused[++l] = i;
+                *unused++ = i;
             }
         }
 
-        return l;
+        return unused;
     }
 
     const matrix *const cost_matrix_;
