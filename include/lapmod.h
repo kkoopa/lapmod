@@ -111,6 +111,8 @@ class problem {
     static constexpr int k_ok_idx() noexcept { return 7; }
     static constexpr int k_field_count() noexcept { return 8; }
 
+    static constexpr int k_max_core() noexcept { return 8192; }
+
     auto get_field(int idx) const noexcept {
         return data_.get() + idx * cost_matrix_->width();
     }
@@ -121,9 +123,10 @@ class problem {
     explicit problem(const matrix *cost_matrix)
         : cost_matrix_(cost_matrix),
           kk_(cost_matrix_->height(),
-              std::vector<int>(cost_matrix_->height() >> 5 < 2
-                                   ? cost_matrix_->height()
-                                   : (cost_matrix_->height() >> 5) + 1)),
+              std::vector<int>(
+                  std::max(std::min(cost_matrix_->width(), k_max_core()),
+                           cost_matrix_->width() >> 2u))
+),
           data_{std::make_unique<int[]>(k_field_count() *
                                         cost_matrix_->width())} {}
 
@@ -186,9 +189,7 @@ class problem {
     void selpp_cr() const {
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
-        const auto end = cost_matrix_->width() >> 5 < 2
-                             ? cost_matrix_->width()
-                             : cost_matrix_->width() >> 5;
+        const auto end = static_cast<int>(kk_.front().size());
 
         std::fill_n(v, cost_matrix_->width(), inf());
         x_ = std::make_unique<int[]>(cost_matrix_->height());
