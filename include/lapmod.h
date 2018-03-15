@@ -329,7 +329,7 @@ class problem {
     }
 
     template <class BidiIt>
-    void augmentation(BidiIt unused_end, bool approximate) const noexcept {
+    void augmentation(BidiIt unused_end, bool approximate) const {
         const auto d = get_field(k_d_idx());
         const BidiIt unused = get_field(k_unused_idx());
         const auto lab = get_field(k_lab_idx());
@@ -449,7 +449,7 @@ class problem {
         } while (unused_end != unused);
     }
 
-    template <class BidiIt> BidiIt optcheck() const noexcept {
+    template <class BidiIt> BidiIt optcheck() const {
         BidiIt unused = get_field(k_unused_idx());
         const auto u = get_field(k_u_idx());
         const auto v = get_field(k_v_idx());
