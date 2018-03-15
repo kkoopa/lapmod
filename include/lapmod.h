@@ -48,9 +48,7 @@ class matrix {
  public:
     matrix() noexcept : height_{}, width_{}, data_{} {}
     matrix(const matrix &) = delete;
-    matrix(matrix &&other) noexcept
-        : height_{other.height_}, width_{other.width_}, data_{std::move(
-                                                            other.data_)} {}
+    matrix(matrix &&other) = default;
     explicit matrix(int n) : matrix(n, n) {}
     matrix(int height, int width)
         : height_{height}, width_{width}, data_{std::make_unique<int[]>(
