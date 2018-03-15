@@ -68,7 +68,7 @@ class matrix {
     }
 
     matrix &operator=(const matrix &) = delete;
-    matrix &operator=(matrix &&other) = delete;
+    matrix &operator=(matrix &&other) = default;
 
     int height() const noexcept { return height_; }
     int width() const noexcept { return width_; }
