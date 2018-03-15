@@ -125,8 +125,7 @@ class problem {
           kk_(cost_matrix_->height(),
               std::vector<int>(
                   std::max(std::min(cost_matrix_->width(), k_max_core()),
-                           cost_matrix_->width() >> 2u))
-),
+                           cost_matrix_->width() >> 2u))),
           data_{std::make_unique<int[]>(k_field_count() *
                                         cost_matrix_->width())} {}
 
