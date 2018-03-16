@@ -31,6 +31,9 @@
  *
  */
 
+#ifndef LAPMOD_H_
+#define LAPMOD_H_
+
 #include <algorithm>
 #include <initializer_list>
 #include <iostream>
@@ -480,4 +483,6 @@ class problem {
     }
 };
 } // namespace lapmod
+
+#endif // LAPMOD_H_
 
