@@ -61,8 +61,8 @@ class matrix {
             l.begin()->size() > std::numeric_limits<int>::max()) {
             throw std::range_error("Matrix dimensions too large.");
         }
-        std::accumulate(l.begin(), l.end(), data_.get(),
-                        [](auto *lhs, const auto &rhs) {
+        std::accumulate(l.begin(), l.end(),
+                        data_.get(), [](auto *lhs, const auto &rhs) noexcept {
                             return std::copy(rhs.begin(), rhs.end(), lhs);
                         });
     }
@@ -148,7 +148,8 @@ class problem {
         friend class problem;
         template <typename T>
         auto move_helper(T &&x, const matrix *m) noexcept {
-            std::for_each(x.get(), x.get() + m->height(), [](auto &n) { --n; });
+            std::for_each(x.get(),
+                          x.get() + m->height(), [](auto &n) noexcept { --n; });
             return std::forward<T>(x);
         }
         solution(std::unique_ptr<int[]> &&x, const matrix *c, const int *v,
