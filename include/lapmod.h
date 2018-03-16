@@ -95,8 +95,16 @@ class matrix {
         os << ']';
         return os;
     }
-    const int height_;
-    const int width_;
+
+    friend void swap(matrix &l, matrix &r) noexcept {
+        using std::swap;
+        swap(l.data_, r.data_);
+        swap(l.height_, r.height_);
+        swap(l.width_, r.width_);
+    }
+
+    int height_;
+    int width_;
     std::unique_ptr<int[]> data_;
 };
 
@@ -148,12 +156,21 @@ class problem {
 
      private:
         friend class problem;
+
+        friend void swap(solution &l, solution &r) noexcept {
+            using std::swap;
+            swap(l.s_, r.s_);
+            swap(l.l_, r.l_);
+            swap(l.c_, r.c_);
+        }
+
         template <typename T>
         auto move_helper(T &&x, const matrix *m) noexcept {
             std::for_each(x.get(),
                           x.get() + m->height(), [](auto &n) noexcept { --n; });
             return std::forward<T>(x);
         }
+
         solution(std::unique_ptr<int[]> &&x, const matrix *c, const int *v,
                  const int *u) noexcept
             : s_{move_helper(std::move(x), c)}, l_{c->height()},
@@ -172,8 +189,8 @@ class problem {
         }
 
         std::unique_ptr<const int[]> s_;
-        const int l_;
-        const long c_;
+        int l_;
+        long c_;
     };
 
     solution solve(bool approximate = false) const {
@@ -476,10 +493,19 @@ class problem {
         return unused;
     }
 
-    const matrix *const cost_matrix_;
+    friend void swap(problem &l, problem &r) noexcept {
+        using std::swap;
+        swap(l.cost_matrix_, r.cost_matrix_);
+        swap(l.kk_, r.kk_);
+        swap(l.data_, r.data_);
+        swap(l.x_, r.x_);
+    }
+
+    const matrix *cost_matrix_;
     mutable std::vector<std::vector<int>> kk_;
-    const std::unique_ptr<int[]> data_;
+    std::unique_ptr<int[]> data_;
     mutable std::unique_ptr<int[]> x_;
+
     static constexpr int inf() noexcept {
         return std::numeric_limits<int>::max();
     }
