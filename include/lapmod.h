@@ -49,7 +49,11 @@ namespace lapmod {
 class matrix {
  public:
     matrix() noexcept : height_{}, width_{}, data_{} {}
-    matrix(const matrix &) = delete;
+    matrix(const matrix &other)
+        : height_{other.height_}, width_{other.width_},
+          data_{std::make_unique<int[]>(height_ * width_)} {
+        std::copy_n(other.data_.get(), height_ * width_, data_.get());
+    }
     matrix(matrix &&other) = default;
     explicit matrix(int n) : matrix(n, n) {}
     matrix(int height, int width)
@@ -69,7 +73,11 @@ class matrix {
                         });
     }
 
-    matrix &operator=(const matrix &) = delete;
+    matrix &operator=(matrix other) noexcept {
+        using std::swap;
+        swap(*this, other);
+        return *this;
+    }
     matrix &operator=(matrix &&other) = default;
 
     int height() const noexcept { return height_; }
@@ -126,28 +134,55 @@ class problem {
     }
 
  public:
-    problem() = delete;
-    problem(const problem &) = delete;
+    problem(const problem &other)
+        : cost_matrix_{other.cost_matrix_}, kk_{other.kk_},
+          data_{
+              std::make_unique<int[]>(k_field_count() * cost_matrix_->width())},
+          x_{} {
+        std::copy_n(other.data_.get(), k_field_count() * cost_matrix_->width(),
+                    data_.get());
+        if (other.x_) {
+            x_ = std::make_unique<int[]>(cost_matrix_->height());
+            std::copy_n(other.x_.get(), cost_matrix_->height(), x_.get());
+        }
+    }
+
+    problem(problem &&) = default;
+
     explicit problem(const matrix *cost_matrix)
         : cost_matrix_(cost_matrix),
           kk_(cost_matrix_->height(),
               std::vector<int>(
                   std::max(std::min(cost_matrix_->width(), k_max_core()),
                            cost_matrix_->width() >> 2u))),
-          data_{std::make_unique<int[]>(k_field_count() *
-                                        cost_matrix_->width())} {}
+          data_{
+              std::make_unique<int[]>(k_field_count() * cost_matrix_->width())},
+          x_{} {}
 
-    problem &operator=(const problem &) = delete;
+    problem &operator=(problem other) noexcept {
+        using std::swap;
+        swap(*this, other);
+        return *this;
+    }
+
+    problem &operator=(problem &&other) = default;
 
     int size() const noexcept { return cost_matrix_->height(); }
 
     class solution {
      public:
-        solution() = delete;
-        solution(const solution &) = delete;
+        solution(const solution &other)
+            : s_{std::make_unique<int[]>(other.l_)}, l_{other.l_},
+              c_{other.c_} {
+            std::copy_n(other.s_.get(), l_, s_.get());
+        }
         solution(solution &&other) = default;
 
-        solution &operator=(const solution &) = delete;
+        solution &operator=(solution other) noexcept {
+            using std::swap;
+            swap(*this, other);
+            return *this;
+        }
         solution &operator=(solution &&other) = default;
 
         const int *data() const noexcept { return s_.get(); }
@@ -155,6 +190,7 @@ class problem {
         long value() const noexcept { return c_; }
 
      private:
+        solution() = default;
         friend class problem;
 
         friend void swap(solution &l, solution &r) noexcept {
@@ -188,7 +224,7 @@ class problem {
             return os;
         }
 
-        std::unique_ptr<const int[]> s_;
+        std::unique_ptr<int[]> s_;
         int l_;
         long c_;
     };
@@ -203,6 +239,8 @@ class problem {
     }
 
  private:
+    problem() = default;
+
     void selpp_cr() const {
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
