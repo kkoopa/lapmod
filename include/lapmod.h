@@ -78,7 +78,6 @@ class matrix {
         swap(*this, other);
         return *this;
     }
-    matrix &operator=(matrix &&other) = default;
 
     int height() const noexcept { return height_; }
     int width() const noexcept { return width_; }
@@ -165,8 +164,6 @@ class problem {
         return *this;
     }
 
-    problem &operator=(problem &&other) = default;
-
     int size() const noexcept { return cost_matrix_->height(); }
 
     class solution {
@@ -183,7 +180,6 @@ class problem {
             swap(*this, other);
             return *this;
         }
-        solution &operator=(solution &&other) = default;
 
         const int *data() const noexcept { return s_.get(); }
         int size() const noexcept { return l_; }
