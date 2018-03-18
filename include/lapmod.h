@@ -240,7 +240,7 @@ class problem {
     void selpp_cr() const {
         const auto v = get_field(k_v_idx());
         const auto y = get_field(k_y_idx());
-        const auto end = static_cast<int>(kk_.front().size());
+        const auto end = kk_.empty() ? 0 : static_cast<int>(kk_.front().size());
 
         std::fill_n(v, cost_matrix_->width(), inf());
         x_ = std::make_unique<int[]>(cost_matrix_->height());
